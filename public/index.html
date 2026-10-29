@@ -1,0 +1,4702 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>The Player</title>
+  <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/vant/4.8.4/index.min.css" />
+  <style>
+    /* ========== CSS 变量系统 ========== */
+    :root {
+      /* 背景层 */
+      --bg-primary: #0A0D12;
+      --bg-secondary: #0F131C;
+      --bg-tertiary: #161D2B;
+      --bg-elevated: #1E2636;
+      --bg-overlay: rgba(10, 13, 18, 0.85);
+
+      /* 主题色 */
+      --primary: #38BDF8;
+      --primary-hover: #0EA5E9;
+      --primary-light: rgba(56, 189, 248, 0.1);
+
+      --accent: #6EE7B7;
+      --accent-hover: #34D399;
+
+      --warning: #FBBF24;
+      --error: #EF4444;
+
+      /* 文字颜色 */
+      --text-primary: #F8FAFC;
+      --text-secondary: #CBD5E1;
+      --text-tertiary: #64748B;
+      --text-disabled: #475569;
+
+      /* 边框和分割线 */
+      --border-primary: rgba(203, 213, 225, 0.1);
+      --border-secondary: rgba(203, 213, 225, 0.05);
+      --divider: rgba(203, 213, 225, 0.08);
+
+      /* 间距 */
+      --space-1: 4px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+      --space-10: 40px;
+
+      /* 圆角 */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-full: 999px;
+
+      /* 阴影 */
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.6);
+
+      /* 字体 */
+      --font-display: 32px;
+      --font-h1: 24px;
+      --font-h2: 20px;
+      --font-h3: 18px;
+      --font-body: 15px;
+      --font-small: 13px;
+      --font-xs: 11px;
+
+      /* 动画 */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in: cubic-bezier(0.4, 0, 1, 1);
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    [v-cloak] { display: none !important; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--text-secondary);
+    }
+    #app { min-height: 100vh; }
+
+    .auth-page {
+      padding: var(--space-5) var(--space-4);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(160deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      position: relative;
+    }
+    .auth-page::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(110, 231, 183, 0.03) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .auth-page .logo {
+      font-size: 28px;
+      color: var(--text-primary);
+      margin-top: var(--space-8);
+      margin-bottom: var(--space-6);
+      text-align: center;
+      font-weight: bold;
+      letter-spacing: 2px;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-page .logo span {
+      display: block;
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      margin-top: var(--space-2);
+      letter-spacing: 1px;
+    }
+    .auth-form {
+      width: 100%;
+      max-width: 400px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-4);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(10px);
+    }
+    .form-row {
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .form-row:last-child { border-bottom: none; }
+    .form-row .row-label {
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-2);
+      font-weight: 500;
+    }
+    .form-row .row-content { }
+
+    .gender-group { display: flex; gap: 16px; }
+    .hobby-group { display: flex; flex-wrap: wrap; gap: 10px; }
+
+    input::-ms-reveal,
+    input::-ms-clear,
+    input::-webkit-credentials-auto-fill-button,
+    input::-webkit-caps-lock-indicator {
+      display: none !important;
+    }
+
+    .auth-switch {
+      margin-top: var(--space-4);
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: var(--font-small);
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+    .auth-switch a {
+      color: var(--primary);
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .main-page {
+      padding: var(--space-5) var(--space-4);
+      padding-bottom: 72px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: linear-gradient(160deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      position: relative;
+    }
+    .main-page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 100%, rgba(110, 231, 183, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .main-header {
+      color: var(--text-primary);
+      margin-top: 50px;
+      margin-bottom: 60px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .main-header h1 {
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 3px;
+      color: var(--text-primary);
+    }
+    .main-header p {
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      margin-top: var(--space-2);
+    }
+    .main-actions {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      width: 100%;
+      max-width: 300px;
+      position: relative;
+      z-index: 1;
+    }
+    .action-btn {
+      height: auto !important;
+      min-height: 64px;
+      padding: var(--space-3) var(--space-4) !important;
+      font-size: 18px !important;
+      border-radius: var(--radius-lg) !important;
+      font-weight: bold !important;
+      letter-spacing: 2px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      line-height: 1.4 !important;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.25s var(--ease-out);
+      border: 1px solid !important;
+    }
+    .action-btn:active {
+      transform: scale(0.98);
+    }
+    .action-btn .btn-main-text { font-size: 17px; font-weight: bold; }
+    .action-btn .btn-sub-text { font-size: var(--font-xs); font-weight: normal; opacity: 0.8; margin-top: 2px; letter-spacing: 0; }
+    .action-btn .btn-countdown-text { font-size: var(--font-xs); font-weight: normal; margin-top: 4px; letter-spacing: 0; animation: blink 1s infinite; }
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: btnSweep 3s ease-in-out infinite;
+    }
+    @keyframes btnSweep {
+      0%, 100% { left: -100%; }
+      50% { left: 100%; }
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .btn-write {
+      background: var(--primary) !important;
+      border-color: var(--primary-hover) !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+    }
+    .btn-write:hover {
+      box-shadow: 0 0 28px rgba(56, 189, 248, 0.4) !important;
+      transform: translateY(-2px);
+    }
+    .btn-pick {
+      background: var(--accent) !important;
+      border-color: var(--accent-hover) !important;
+      color: #0F172A !important;
+      box-shadow: 0 0 20px rgba(110, 231, 183, 0.3), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+    }
+    .btn-pick:hover {
+      box-shadow: 0 0 28px rgba(110, 231, 183, 0.4) !important;
+      transform: translateY(-2px);
+    }
+    .btn-history {
+      background: var(--bg-tertiary) !important;
+      border-color: var(--border-primary) !important;
+      color: var(--text-secondary) !important;
+      box-shadow: var(--shadow-md) !important;
+    }
+    .btn-history:hover {
+      background: var(--bg-elevated) !important;
+      transform: translateY(-2px);
+    }
+    .btn-workflow {
+      background: linear-gradient(135deg, #8b5cf6, #6366f1) !important;
+      border-color: #818cf8 !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 0 20px rgba(139, 92, 246, 0.28), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+    }
+    .btn-workflow:hover {
+      box-shadow: 0 0 28px rgba(139, 92, 246, 0.4) !important;
+      transform: translateY(-2px);
+    }
+    .btn-cooling { filter: grayscale(0.5) brightness(0.6); }
+    .van-button--disabled.action-btn {
+      opacity: 1 !important;
+    }
+    .van-button--disabled.action-btn .btn-main-text,
+    .van-button--disabled.action-btn .btn-countdown-text {
+      opacity: 0.7;
+    }
+
+    .blindbox-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--bg-overlay); z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    .blindbox-particles {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+    }
+    .blindbox-particle {
+      position: absolute; border-radius: 50%; opacity: 0;
+    }
+    .blindbox-particle.active {
+      animation: particleFly 1.2s ease-out forwards;
+    }
+    @keyframes particleFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
+    }
+    .blindbox-container {
+      perspective: 1000px; width: 200px; height: 240px;
+      position: relative; cursor: pointer; z-index: 1;
+    }
+    .blindbox-box {
+      width: 100%; height: 100%; position: relative;
+      transform-style: preserve-3d;
+      animation: boxFloat 2s ease-in-out infinite;
+    }
+    .blindbox-box.shaking {
+      animation: boxShakeNew 0.5s ease-in-out 3;
+    }
+    .blindbox-box.opening {
+      animation: boxExplode 1s ease forwards;
+    }
+    .blindbox-lid {
+      position: absolute; top: 0; left: -4px; width: calc(100% + 8px); height: 38%;
+      background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+      border-radius: var(--radius-lg) var(--radius-lg) 4px 4px;
+      transform-origin: top center;
+      z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: #fff;
+      box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5),
+                  inset 0 -3px 6px rgba(0,0,0,0.2);
+    }
+    .blindbox-lid::after {
+      content: ''; position: absolute; top: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 40px; height: 6px; background: rgba(255,255,255,0.3);
+      border-radius: 3px;
+    }
+    .blindbox-box.shaking .blindbox-lid {
+      animation: lidRattle 0.5s ease-in-out 3;
+    }
+    .blindbox-box.opening .blindbox-lid {
+      animation: lidFlyOff 0.6s ease forwards;
+    }
+    .blindbox-body {
+      position: absolute; bottom: 0; left: 0; width: 100%; height: 66%;
+      background: linear-gradient(180deg, var(--bg-tertiary), var(--bg-secondary));
+      border-radius: 4px 4px var(--radius-lg) var(--radius-lg);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6),
+                  inset 0 3px 6px rgba(255,255,255,0.05);
+      border: 1px solid var(--border-primary);
+    }
+    .blindbox-body::before {
+      content: ''; position: absolute; top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60%; height: 3px; background: rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }
+    .blindbox-question {
+      font-size: 72px; color: var(--text-primary);
+      animation: questionPulse 1.5s ease-in-out infinite;
+      text-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+    }
+    .blindbox-light {
+      position: absolute; top: 50%; left: 50%;
+      width: 0; height: 0; border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.9), rgba(14, 165, 233, 0.4), transparent);
+      transform: translate(-50%, -50%);
+      z-index: 3; pointer-events: none;
+    }
+    .blindbox-light.active {
+      animation: lightBurstNew 1s ease forwards;
+    }
+    .blindbox-sparkles {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 300px; height: 300px; z-index: 4;
+      pointer-events: none;
+    }
+    .sparkle {
+      position: absolute; font-size: 20px; opacity: 0;
+    }
+    .sparkle.active {
+      animation: sparkleFly 0.8s ease-out forwards;
+    }
+    @keyframes sparkleFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.5) rotate(0deg); }
+      50% { opacity: 1; transform: translate(var(--sx), var(--sy)) scale(1.2) rotate(180deg); }
+      100% { opacity: 0; transform: translate(calc(var(--sx) * 1.5), calc(var(--sy) * 1.5)) scale(0) rotate(360deg); }
+    }
+    .blindbox-result-card {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      z-index: 5; opacity: 0;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6) var(--space-5); width: 280px;
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-xl);
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .blindbox-result-card.active {
+      animation: cardReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    @keyframes cardReveal {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-10deg); }
+      60% { transform: translate(-50%, -50%) scale(1.05) rotate(2deg); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+    }
+    .result-card-icon {
+      font-size: 48px; margin-bottom: var(--space-3);
+      animation: iconBounce 0.6s ease infinite alternate;
+    }
+    @keyframes iconBounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-6px); }
+    }
+    .result-card-title {
+      font-size: var(--font-h3); font-weight: bold; color: var(--primary);
+      margin-bottom: var(--space-2);
+    }
+    .result-card-desc {
+      font-size: var(--font-small); color: var(--text-tertiary); line-height: 1.6;
+    }
+    .blindbox-label {
+      color: var(--text-secondary); font-size: var(--font-h3); font-weight: bold;
+      margin-top: 28px; letter-spacing: 3px;
+      z-index: 1;
+    }
+    .blindbox-hint {
+      color: var(--text-tertiary); font-size: var(--font-small);
+      margin-top: var(--space-3); z-index: 1;
+      animation: hintPulse 2s ease-in-out infinite;
+    }
+    @keyframes hintPulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    .blindbox-pick .blindbox-lid {
+      background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+      box-shadow: 0 6px 20px rgba(110, 231, 183, 0.5),
+                  inset 0 -3px 6px rgba(0,0,0,0.2);
+    }
+    .blindbox-pick .blindbox-body {
+      background: linear-gradient(180deg, var(--bg-tertiary), var(--bg-secondary));
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6),
+                  inset 0 3px 6px rgba(255,255,255,0.05);
+    }
+    @keyframes boxFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    @keyframes boxShakeNew {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      10% { transform: rotate(-8deg) scale(1.02); }
+      20% { transform: rotate(8deg) scale(1.02); }
+      30% { transform: rotate(-6deg) scale(1.01); }
+      40% { transform: rotate(6deg) scale(1.01); }
+      50% { transform: rotate(-4deg) scale(1); }
+      60% { transform: rotate(4deg) scale(1); }
+      70% { transform: rotate(-2deg); }
+      80% { transform: rotate(2deg); }
+      90% { transform: rotate(-1deg); }
+    }
+    @keyframes lidRattle {
+      0%, 100% { transform: rotateX(0deg) translateY(0); }
+      25% { transform: rotateX(-5deg) translateY(-3px); }
+      50% { transform: rotateX(3deg) translateY(-1px); }
+      75% { transform: rotateX(-3deg) translateY(-4px); }
+    }
+    @keyframes lidFlyOff {
+      0% { transform: rotateX(0deg) translateY(0); opacity: 1; }
+      30% { transform: rotateX(-30deg) translateY(-20px); }
+      100% { transform: rotateX(-120deg) translateY(-200px) translateX(80px); opacity: 0; }
+    }
+    @keyframes boxExplode {
+      0% { transform: scale(1); opacity: 1; }
+      40% { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(0.3); opacity: 0; }
+    }
+    @keyframes questionPulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.08); opacity: 1; }
+    }
+    @keyframes lightBurstNew {
+      0% { width: 0; height: 0; opacity: 1; }
+      50% { opacity: 0.8; }
+      100% { width: 500px; height: 500px; opacity: 0; }
+    }
+    @keyframes resultFadeIn {
+      0% { opacity: 0; transform: scale(0.5); }
+      60% { transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .exit-btn { margin-top: var(--space-10); color: var(--text-tertiary) !important; border-color: var(--border-primary) !important; background: transparent !important; font-size: var(--font-small); }
+    .feedback-entry { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-5); padding: var(--space-3) var(--space-4); background: var(--bg-secondary); border-radius: var(--radius-md); border: 1px solid var(--border-primary); font-size: var(--font-body); color: var(--text-secondary); cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+    .feedback-entry:active { background: var(--bg-tertiary); transform: scale(0.98); }
+
+    .task-card {
+      width: 100%;
+      max-width: 300px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-top: var(--space-6);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-md);
+      position: relative;
+      z-index: 1;
+      backdrop-filter: blur(10px);
+    }
+    .task-card-title {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--divider);
+    }
+    .task-item {
+      display: flex;
+      align-items: center;
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .task-item:last-child { border-bottom: none; }
+    .task-icon { font-size: 24px; margin-right: var(--space-3); flex-shrink: 0; }
+    .task-info { flex: 1; min-width: 0; }
+    .task-name { font-size: var(--font-small); font-weight: bold; color: var(--text-primary); }
+    .task-desc { font-size: var(--font-xs); color: var(--text-tertiary); margin-top: 2px; line-height: 1.4; }
+    .task-reward { font-size: var(--font-xs); color: var(--primary); margin-top: 2px; font-weight: 500; }
+    .task-btn {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: var(--font-xs);
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      margin-left: var(--space-2);
+      transition: all 0.2s var(--ease-out);
+    }
+    .task-btn:active { transform: scale(0.95); }
+    .task-btn-checkin { background: var(--primary); box-shadow: 0 0 12px rgba(56, 189, 248, 0.3); }
+    .task-btn-checkin:hover { box-shadow: 0 0 16px rgba(56, 189, 248, 0.4); }
+    .task-btn-invite { background: var(--accent); color: #0F172A; box-shadow: 0 0 12px rgba(110, 231, 183, 0.3); }
+    .task-btn-invite:hover { box-shadow: 0 0 16px rgba(110, 231, 183, 0.4); }
+    .share-icon-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+    .share-icon-circle { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: transform 0.2s; }
+    .share-icon-item:active .share-icon-circle { transform: scale(0.9); }
+    .task-btn-write-bonus { background: var(--bg-tertiary); color: var(--text-secondary); border: 1px solid var(--border-primary); }
+    .task-btn-done { background: var(--bg-tertiary); color: var(--text-disabled); cursor: not-allowed; opacity: 0.5; }
+
+
+    .pick-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-6) var(--space-5);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+    }
+    .pick-card .card-content {
+      font-size: var(--font-body);
+      line-height: 1.8;
+      color: var(--text-secondary);
+      margin-bottom: var(--space-5);
+      padding: var(--space-4);
+      background: rgba(56, 189, 248, 0.05);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-secondary);
+    }
+    .pick-card .card-user { display: flex; flex-direction: column; gap: var(--space-2); }
+    .pick-card .card-user .user-name { font-size: var(--font-h3); font-weight: bold; color: var(--primary); }
+    .pick-card .card-user .user-info { font-size: var(--font-small); color: var(--text-tertiary); }
+    .pick-card .card-user .hobby-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .pick-card .card-user .hobby-tag {
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: var(--font-xs);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      font-weight: 500;
+    }
+
+    .history-page {
+      padding: var(--space-5) var(--space-4);
+      min-height: 100vh;
+      background: linear-gradient(160deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+    }
+    .history-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-5);
+      color: var(--text-primary);
+    }
+    .history-header h2 {
+      font-size: var(--font-h2);
+      font-weight: bold;
+      flex: 1;
+      color: var(--text-primary);
+    }
+    .history-back {
+      color: var(--primary);
+      font-size: var(--font-small);
+      cursor: pointer;
+      margin-right: var(--space-3);
+    }
+    .history-section {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      border: 1px solid var(--border-primary);
+      box-shadow: var(--shadow-md);
+      backdrop-filter: blur(10px);
+    }
+    .history-section-title {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: var(--space-3);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--divider);
+    }
+    .history-item {
+      padding: var(--space-3) 0;
+      border-bottom: 1px solid var(--divider);
+    }
+    .history-item:last-child { border-bottom: none; }
+    .history-item .item-content {
+      font-size: var(--font-small);
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+    .history-item .item-meta {
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+    }
+    .history-item .item-meta span {
+      margin-right: var(--space-3);
+    }
+    .history-empty {
+      text-align: center;
+      color: var(--text-tertiary);
+      padding: var(--space-5) 0;
+      font-size: var(--font-small);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: var(--bg-elevated);
+      display: flex;
+      border-top: 1px solid var(--border-primary);
+      z-index: 100;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+    }
+    .bottom-nav .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-tertiary);
+      font-size: var(--font-xs);
+      position: relative;
+      transition: color 0.2s;
+    }
+    .bottom-nav .nav-item.active { color: var(--primary); }
+    .bottom-nav .nav-item .nav-icon { font-size: 22px; margin-bottom: 2px; }
+    .bottom-nav .nav-item .nav-badge {
+      position: absolute;
+      top: 4px;
+      right: 50%;
+      margin-right: -18px;
+      min-width: 16px;
+      height: 16px;
+      line-height: 16px;
+      padding: 0 4px;
+      background: var(--error);
+      color: #fff;
+      border-radius: var(--radius-sm);
+      font-size: 10px;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    /* AI助手悬浮按钮（主页右侧） */
+    .ai-float-btn {
+      position: fixed;
+      right: 16px;
+      bottom: 80px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.4), 0 0 20px rgba(56, 189, 248, 0.3);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 99;
+      transition: all 0.25s var(--ease-out);
+    }
+    .ai-float-btn:active {
+      transform: scale(0.92);
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+    .ai-float-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+    .ai-float-label {
+      font-size: 9px;
+      color: #fff;
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* ===== 广场页面样式 ===== */
+    .plaza-page {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      padding-bottom: 60px;
+    }
+    .plaza-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-primary);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+    .plaza-header h2 { font-size: var(--font-h3); color: var(--text-primary); }
+    .plaza-publish-btn {
+      padding: 6px 16px;
+      border-radius: var(--radius-md);
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      font-size: var(--font-small);
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+      transition: all 0.2s var(--ease-out);
+    }
+    .plaza-publish-btn:active { transform: scale(0.96); opacity: 0.9; }
+    .plaza-list { padding: var(--space-3); }
+    .plaza-post-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-3);
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-primary);
+    }
+    .post-user-info {
+      display: flex;
+      align-items: center;
+      margin-bottom: var(--space-3);
+    }
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-right: 10px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+    }
+    .post-user-meta { flex: 1; }
+    .post-nickname { font-size: var(--font-body); font-weight: 600; color: var(--text-primary); }
+    .post-time { font-size: var(--font-xs); color: var(--text-tertiary); margin-top: 2px; }
+    .post-content {
+      font-size: var(--font-body);
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .post-media { margin-bottom: 10px; }
+    .post-image {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .post-video {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      max-height: 300px;
+    }
+    .post-actions {
+      display: flex;
+      gap: 24px;
+      padding-top: 8px;
+      border-top: 1px solid var(--divider);
+    }
+    .post-action {
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: color 0.2s;
+      user-select: none;
+    }
+    .post-action.liked { color: #e74c3c; }
+    .post-action:active { transform: scale(0.95); }
+    .plaza-load-more, .plaza-no-more {
+      text-align: center;
+      padding: var(--space-4);
+      color: var(--text-tertiary);
+      font-size: var(--font-small);
+    }
+    .plaza-load-more { cursor: pointer; color: var(--primary); }
+    .plaza-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-tertiary);
+    }
+    .plaza-empty-icon { font-size: 48px; margin-bottom: var(--space-3); }
+    .plaza-loading {
+      display: flex;
+      justify-content: center;
+      padding: var(--space-10);
+    }
+
+    /* ===== 发布动态弹窗样式 ===== */
+    .post-popup-content { padding: var(--space-5) var(--space-4); }
+    .post-popup-title {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      margin-bottom: var(--space-4);
+      color: var(--text-primary);
+    }
+    .post-popup-textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: var(--space-3);
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-small);
+      line-height: 1.6;
+      resize: vertical;
+      font-family: inherit;
+      box-sizing: border-box;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .post-popup-textarea::placeholder { color: var(--text-tertiary); }
+    .post-popup-counter {
+      text-align: right;
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+      margin-top: 4px;
+    }
+    .post-popup-media { margin-top: var(--space-4); }
+    /* 附件预览区 */
+    .post-popup-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: var(--space-3);
+    }
+    .preview-item {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      background: var(--bg-tertiary);
+    }
+    .preview-img, .preview-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-remove {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .preview-loading {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      font-size: 10px;
+      text-align: center;
+      padding: 2px 0;
+    }
+    /* 上传工具栏 */
+    .post-popup-toolbar {
+      margin-top: var(--space-4);
+      display: flex;
+      align-items: center;
+    }
+    .upload-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border: 2px dashed var(--border-primary);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-btn:active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .upload-icon {
+      font-size: 28px;
+      color: var(--text-tertiary);
+      line-height: 1;
+    }
+    .upload-label {
+      font-size: 10px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    /* 发布失败错误提示 */
+    .post-popup-error {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: var(--space-3);
+      padding: 8px 12px;
+      background: rgba(239,68,68,0.1);
+      border-radius: var(--radius-sm);
+      color: var(--error);
+      font-size: var(--font-small);
+    }
+    .retry-btn {
+      padding: 4px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--error);
+      background: var(--bg-secondary);
+      color: var(--error);
+      font-size: var(--font-xs);
+      cursor: pointer;
+    }
+    .post-popup-buttons {
+      display: flex;
+      gap: var(--space-3);
+      margin-top: var(--space-5);
+    }
+    .post-popup-cancel {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-primary);
+      background: var(--bg-tertiary);
+      font-size: var(--font-body);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+    .post-popup-cancel:active { transform: scale(0.96); }
+    .post-popup-submit {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: var(--radius-full);
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      font-size: var(--font-body);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      transition: all 0.2s var(--ease-out);
+    }
+    .post-popup-submit:active { transform: scale(0.96); opacity: 0.9; }
+    .post-popup-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ===== 评论弹窗样式 ===== */
+    .comment-popup-content {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .comment-popup-title {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--divider);
+      text-align: center;
+      color: var(--text-primary);
+    }
+    .comment-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-3) var(--space-4);
+    }
+    .comment-item {
+      display: flex;
+      margin-bottom: var(--space-4);
+    }
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: var(--font-small);
+      font-weight: bold;
+      margin-right: 10px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+    }
+    .comment-body { flex: 1; }
+    .comment-nickname { font-size: var(--font-small); font-weight: 600; color: var(--text-primary); }
+    .comment-text { font-size: var(--font-small); color: var(--text-secondary); margin-top: 2px; line-height: 1.5; }
+    .comment-time { font-size: var(--font-xs); color: var(--text-tertiary); margin-top: 4px; }
+    .comment-empty {
+      text-align: center;
+      padding: var(--space-10) var(--space-5);
+      color: var(--text-tertiary);
+      font-size: var(--font-small);
+    }
+    .comment-input-bar {
+      display: flex;
+      padding: var(--space-3) var(--space-4);
+      border-top: 1px solid var(--divider);
+      background: var(--bg-secondary);
+      flex-shrink: 0;
+    }
+    .comment-input-bar input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-full);
+      font-size: var(--font-small);
+      outline: none;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .comment-input-bar input::placeholder { color: var(--text-tertiary); }
+    .comment-input-bar button {
+      margin-left: 10px;
+      padding: 8px 16px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      font-size: var(--font-small);
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+      transition: all 0.2s var(--ease-out);
+    }
+    .comment-input-bar button:active { transform: scale(0.96); opacity: 0.9; }
+    .comment-input-bar button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .chat-page {
+      padding: 0;
+      min-height: 100vh;
+      background: var(--bg-primary);
+    }
+    .chat-header {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-primary);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(20px);
+    }
+    .chat-header .back-btn {
+      font-size: var(--font-small);
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: var(--space-3);
+    }
+    .chat-header h2 {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .conv-list {
+      padding: 0;
+    }
+    .conv-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--divider);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .conv-item:active { background: var(--bg-tertiary); }
+    .conv-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      flex-shrink: 0;
+      margin-right: var(--space-3);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+    }
+    .conv-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .conv-name {
+      font-size: var(--font-body);
+      font-weight: bold;
+      color: var(--text-primary);
+    }
+    .conv-last-msg {
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .conv-meta {
+      flex-shrink: 0;
+      text-align: right;
+      margin-left: 8px;
+    }
+    .conv-time {
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+    }
+    .conv-unread {
+      display: inline-block;
+      min-width: 18px;
+      height: 18px;
+      line-height: 18px;
+      padding: 0 5px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: var(--radius-full);
+      font-size: var(--font-xs);
+      text-align: center;
+      margin-top: 4px;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+    }
+    .conv-empty {
+      text-align: center;
+      color: var(--text-tertiary);
+      padding: 60px 0;
+      font-size: var(--font-small);
+    }
+
+    .msg-page {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg-primary);
+    }
+    .msg-header {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-primary);
+      flex-shrink: 0;
+      backdrop-filter: blur(20px);
+    }
+    .msg-header .back-btn {
+      font-size: var(--font-small);
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: var(--space-3);
+    }
+    .msg-header h2 {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .msg-header .target-info {
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+    }
+    .msg-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    .msg-bubble-wrap {
+      margin-bottom: var(--space-3);
+      display: flex;
+    }
+    .msg-bubble-wrap.sent {
+      justify-content: flex-end;
+    }
+    .msg-bubble-wrap.received {
+      justify-content: flex-start;
+    }
+    .msg-bubble {
+      max-width: 70%;
+      padding: 10px 14px;
+      border-radius: var(--radius-lg);
+      font-size: var(--font-small);
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .msg-bubble-wrap.sent .msg-bubble {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+    .msg-bubble-wrap.received .msg-bubble {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border-primary);
+    }
+    .msg-time-label {
+      text-align: center;
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+      margin-bottom: var(--space-3);
+    }
+    .msg-input-bar {
+      flex-direction: column;
+      padding: 8px 12px;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border-primary);
+      flex-shrink: 0;
+      backdrop-filter: blur(20px);
+    }
+    .ice-break-panel {
+      background: var(--primary-light);
+      border-radius: var(--radius-md);
+      margin-bottom: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border-primary);
+    }
+    .ice-break-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px 4px;
+      font-size: var(--font-xs);
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .ice-break-close {
+      cursor: pointer;
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      padding: 0 4px;
+    }
+    .ice-break-close:active { color: var(--primary); }
+    .ice-break-list {
+      padding: 4px 8px 8px;
+    }
+    .ice-break-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      margin-bottom: 4px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+      border: 1px solid var(--border-primary);
+    }
+    .ice-break-item:last-child { margin-bottom: 0; }
+    .ice-break-item:active {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: scale(0.97);
+    }
+    .ice-break-item:active .ice-break-item-text { color: #fff; }
+    .ice-break-item:active .ice-break-item-icon { filter: brightness(2); }
+    .ice-break-item-icon { font-size: var(--font-small); flex-shrink: 0; }
+    .ice-break-item-text { font-size: var(--font-small); color: var(--text-secondary); line-height: 1.4; }
+    .ice-break-loading-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+    }
+    .ice-break-dot-flashing {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--primary);
+      animation: ice-break-flash 1s infinite alternate;
+    }
+    @keyframes ice-break-flash {
+      0% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
+    .ice-break-btn {
+      height: 36px;
+      padding: 0 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-primary);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: var(--font-small);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.2s var(--ease-out);
+      white-space: nowrap;
+    }
+    .ice-break-btn:active { transform: scale(0.93); background: var(--primary); color: #fff; }
+    .ice-break-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .ice-break-btn-icon { font-size: var(--font-small); }
+    .ice-break-btn-text { font-size: var(--font-xs); font-weight: bold; }
+    .msg-input-bar input {
+      flex: 1;
+      height: 36px;
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-full);
+      padding: 0 14px;
+      font-size: var(--font-small);
+      outline: none;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .msg-input-bar input::placeholder { color: var(--text-tertiary); }
+    .msg-input-bar input:focus {
+      border-color: var(--primary);
+      background: var(--bg-tertiary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .msg-send-btn {
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      font-size: var(--font-small);
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      transition: all 0.2s var(--ease-out);
+    }
+    .msg-send-btn:active { opacity: 0.8; transform: scale(0.96); }
+    .msg-empty {
+      text-align: center;
+      color: var(--text-tertiary);
+      padding: 60px 0;
+      font-size: var(--font-small);
+    }
+
+    .pick-card .card-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: var(--space-4);
+    }
+    .pick-card .card-actions button {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: var(--font-small);
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+    .pick-card .card-actions .btn-close {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-primary);
+    }
+    .pick-card .card-actions .btn-close:active { transform: scale(0.96); }
+    .pick-card .card-actions .btn-chat {
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #0F172A;
+      box-shadow: 0 0 16px rgba(110, 231, 183, 0.3);
+    }
+    .pick-card .card-actions .btn-chat:active { transform: scale(0.96); opacity: 0.9; }
+
+    /* Vant深色主题覆盖 */
+    .van-cell { background: transparent !important; }
+    .van-cell::after { border-color: var(--divider) !important; }
+    .van-field__control { color: var(--text-primary) !important; }
+    .van-field__control::placeholder { color: var(--text-tertiary) !important; }
+    .van-field__control:-webkit-autofill { -webkit-box-shadow: 0 0 0 1000px var(--bg-tertiary) inset !important; -webkit-text-fill-color: var(--text-primary) !important; }
+    .van-radio__label { color: var(--text-secondary) !important; }
+    .van-checkbox__label { color: var(--text-secondary) !important; }
+    .van-radio__icon--checked .van-icon { background: var(--primary) !important; border-color: var(--primary) !important; }
+    .van-checkbox__icon--checked .van-icon { background: var(--primary) !important; border-color: var(--primary) !important; }
+    .van-button--primary { background: linear-gradient(135deg, var(--primary), var(--primary-hover)) !important; border: none !important; }
+    .van-picker { background: var(--bg-secondary) !important; }
+    .van-picker__toolbar { background: var(--bg-secondary) !important; }
+    .van-picker__title { color: var(--text-primary) !important; }
+    .van-picker__confirm { color: var(--primary) !important; }
+    .van-picker__cancel { color: var(--text-tertiary) !important; }
+    .van-picker-column__item { color: var(--text-tertiary) !important; }
+    .van-picker-column__item--selected { color: var(--text-primary) !important; }
+    .van-popup { background: var(--bg-secondary) !important; }
+    .van-hairline-unset--top-bottom::after { border-color: var(--divider) !important; }
+    .van-field__left-icon .van-icon { color: var(--text-tertiary) !important; }
+    .van-toast { background: var(--bg-elevated) !important; border: 1px solid var(--border-primary) !important; color: var(--text-primary) !important; box-shadow: var(--shadow-lg) !important; backdrop-filter: blur(20px) !important; }
+    .van-overlay { background: var(--bg-overlay) !important; }
+    .van-dialog { background: var(--bg-secondary) !important; border: 1px solid var(--border-primary) !important; }
+    .van-dialog__header { color: var(--text-primary) !important; }
+    .van-dialog__message { color: var(--text-secondary) !important; }
+    .van-dialog__confirm { color: var(--primary) !important; }
+    .van-dialog__cancel { color: var(--text-tertiary) !important; }
+
+    .content-gen-btn {
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-primary);
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: var(--font-small);
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+    .content-gen-btn:active { background: var(--primary); color: #fff; }
+    .content-gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .content-suggestions {
+      margin-bottom: var(--space-3);
+    }
+    .content-suggestion-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      border-radius: 10px;
+      background: var(--primary-light);
+      border: 1px solid var(--border-primary);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+    .content-suggestion-item:active {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: scale(0.98);
+    }
+    .content-suggestion-item:active .suggestion-style,
+    .content-suggestion-item:active .suggestion-text { color: #fff; }
+    .suggestion-style {
+      flex-shrink: 0;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-size: var(--font-xs);
+      font-weight: bold;
+      white-space: nowrap;
+    }
+    .suggestion-text {
+      font-size: var(--font-small);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .content-gen-loading-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+    }
+    .content-gen-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--primary);
+      animation: content-gen-flash 1s infinite alternate;
+    }
+    @keyframes content-gen-flash {
+      0% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
+
+    /* ===== AI聊天页面样式 ===== */
+    .ai-chat-page {
+      padding: 0;
+      height: 100vh;
+      background: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .ai-chat-header {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-primary);
+      flex-shrink: 0;
+      backdrop-filter: blur(20px);
+    }
+    .ai-chat-header .back-btn {
+      font-size: var(--font-small);
+      color: var(--primary);
+      cursor: pointer;
+      margin-right: var(--space-3);
+    }
+    .ai-chat-header h2 {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    .ai-chat-header .mcp-badge {
+      padding: 3px 10px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #0F172A;
+      font-size: var(--font-xs);
+      font-weight: bold;
+    }
+    .ai-chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: var(--space-4);
+    }
+    .ai-chat-welcome {
+      text-align: center;
+      padding: var(--space-10) var(--space-5) var(--space-5);
+    }
+    .ai-chat-welcome-icon {
+      font-size: 48px;
+      margin-bottom: var(--space-3);
+    }
+    .ai-chat-welcome-title {
+      font-size: var(--font-h3);
+      font-weight: bold;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .ai-chat-welcome-desc {
+      font-size: var(--font-small);
+      color: var(--text-tertiary);
+      line-height: 1.6;
+    }
+    .ai-chat-quick-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: var(--space-4);
+    }
+    .ai-chat-quick-btn {
+      padding: 8px 14px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-primary);
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-size: var(--font-small);
+      cursor: pointer;
+      transition: all 0.2s var(--ease-out);
+    }
+    .ai-chat-quick-btn:active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      transform: scale(0.95);
+    }
+    .ai-msg-wrap {
+      margin-bottom: var(--space-3);
+      display: flex;
+    }
+    .ai-msg-wrap.user {
+      justify-content: flex-end;
+    }
+    .ai-msg-wrap.assistant {
+      justify-content: flex-start;
+    }
+    .ai-msg-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+      margin-right: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      box-shadow: 0 0 12px rgba(110, 231, 183, 0.3);
+    }
+    .ai-msg-bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: var(--radius-lg);
+      font-size: var(--font-small);
+      line-height: 1.6;
+      word-break: break-word;
+    }
+    .ai-msg-wrap.user .ai-msg-bubble {
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      border-bottom-right-radius: 4px;
+      box-shadow: 0 2px 8px rgba(56, 189, 248, 0.3);
+    }
+    .ai-msg-wrap.assistant .ai-msg-bubble {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border-primary);
+    }
+    .ai-msg-tool-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: #0F172A;
+      font-size: var(--font-xs);
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+    .ai-msg-loading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    .ai-msg-loading-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--primary);
+      animation: ai-chat-flash 1s infinite alternate;
+    }
+    .ai-msg-loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .ai-msg-loading-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes ai-chat-flash {
+      0% { opacity: 0.2; }
+      100% { opacity: 1; }
+    }
+    .ai-chat-input-bar {
+      padding: 8px 12px;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border-primary);
+      flex-shrink: 0;
+      backdrop-filter: blur(20px);
+    }
+    .ai-chat-input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .ai-chat-input-row input {
+      flex: 1;
+      height: 40px;
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-full);
+      padding: 0 16px;
+      font-size: var(--font-small);
+      outline: none;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+    .ai-chat-input-row input::placeholder { color: var(--text-tertiary); }
+    .ai-chat-input-row input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .ai-chat-send-btn {
+      height: 40px;
+      padding: 0 16px;
+      border-radius: var(--radius-full);
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      font-size: var(--font-small);
+      font-weight: bold;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.3);
+      transition: all 0.2s var(--ease-out);
+    }
+    .ai-chat-send-btn:active { opacity: 0.8; transform: scale(0.96); }
+    .ai-chat-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ai-chat-status {
+      font-size: var(--font-xs);
+      color: var(--text-tertiary);
+      margin-top: 4px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" v-cloak>
+
+    <!-- ===== 登录页 ===== -->
+    <div class="auth-page" v-if="currentPage === 'login'">
+      <div class="logo">🌊 The Player</div>
+      <div class="auth-form">
+        <div class="form-row">
+          <div class="row-label">用户名</div>
+          <div class="row-content">
+            <van-field v-model="loginForm.username" placeholder="请输入用户名" maxlength="64" :border="false" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="row-label">密码</div>
+          <div class="row-content">
+            <div style="position: relative;">
+              <input v-model="loginForm.password" :type="showLoginPwd ? 'text' : 'password'" placeholder="请输入密码"
+                style="width: 100%; padding: 8px 36px 8px 0; border: none; font-size: 14px; outline: none; background: transparent;" />
+              <span v-if="showLoginPwd" @click="showLoginPwd = false" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 4px 6px; font-size: 20px; color: #999; user-select: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <span v-if="!showLoginPwd" @click="showLoginPwd = true" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 4px 6px; font-size: 20px; color: #999; user-select: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.36 3.16"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top: 20px;">
+          <van-button round block type="primary" size="large" @click="onLoginClick" :loading="loginLoading">登录</van-button>
+        </div>
+      </div>
+      <div class="auth-switch">
+        还没有用户名？<a @click="currentPage = 'register'">去注册</a>
+      </div>
+    </div>
+
+    <!-- ===== 注册页 ===== -->
+    <div class="auth-page" v-if="currentPage === 'register'">
+      <div class="logo">🌊 The Player</div>
+      <div class="auth-form">
+
+        <!-- 用户名 -->
+        <div class="form-row">
+          <div class="row-label">用户名 *</div>
+          <div class="row-content">
+            <van-field v-model="form.username" placeholder="2-20位，中文/字母/数字/下划线" maxlength="20" :border="false" />
+          </div>
+        </div>
+
+        <!-- 密码 -->
+        <div class="form-row">
+          <div class="row-label">密码 *</div>
+          <div class="row-content">
+            <div style="position: relative;">
+              <input v-model="form.password" :type="showRegisterPwd ? 'text' : 'password'" placeholder="请输入至少8位密码" maxlength="128"
+                style="width: 100%; padding: 8px 36px 8px 0; border: none; font-size: 14px; outline: none; background: transparent;" />
+              <span v-if="showRegisterPwd" @click="showRegisterPwd = false" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 4px 6px; font-size: 20px; color: #999; user-select: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </span>
+              <span v-if="!showRegisterPwd" @click="showRegisterPwd = true" style="position: absolute; right: 0; top: 50%; transform: translateY(-50%); cursor: pointer; padding: 4px 6px; font-size: 20px; color: #999; user-select: none;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.36 3.16"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 性别 -->
+        <div class="form-row">
+          <div class="row-label">性别 *</div>
+          <div class="row-content">
+            <van-radio-group v-model="form.gender" direction="horizontal" class="gender-group">
+              <van-radio name="男">男</van-radio>
+              <van-radio name="女">女</van-radio>
+            </van-radio-group>
+          </div>
+        </div>
+
+        <!-- 年龄 -->
+        <div class="form-row">
+          <div class="row-label">年龄 *</div>
+          <div class="row-content">
+            <van-field v-model="form.age" type="digit" placeholder="请输入年龄(10~100)" :border="false" />
+          </div>
+        </div>
+
+        <!-- 游戏搭子 -->
+        <div class="form-row">
+          <div class="row-label">游戏搭子 *</div>
+          <div class="row-content">
+            <van-checkbox-group v-model="form.hobbies" direction="horizontal" class="hobby-group">
+              <van-checkbox name="王者荣耀" shape="square">王者荣耀</van-checkbox>
+              <van-checkbox name="和平精英" shape="square">和平精英</van-checkbox>
+              <van-checkbox name="原神" shape="square">原神</van-checkbox>
+              <van-checkbox name="蛋仔派对" shape="square">蛋仔派对</van-checkbox>
+              <van-checkbox name="金铲铲之战" shape="square">金铲铲之战</van-checkbox>
+              <van-checkbox name="第五人格" shape="square">第五人格</van-checkbox>
+              <van-checkbox name="鸣潮" shape="square">鸣潮</van-checkbox>
+              <van-checkbox name="崩坏：星穹铁道" shape="square">崩坏：星穹铁道</van-checkbox>
+              <van-checkbox name="光遇" shape="square">光遇</van-checkbox>
+            </van-checkbox-group>
+          </div>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="form-row">
+          <div class="row-label">联系方式（相约组队） *</div>
+          <div class="row-content">
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+              <van-radio-group v-model="form.contactType" direction="horizontal" class="gender-group">
+                <van-radio name="QQ号">QQ号</van-radio>
+                <van-radio name="微信号">微信号</van-radio>
+              </van-radio-group>
+            </div>
+            <van-field v-model="form.contactValue" :placeholder="'请输入' + form.contactType" :border="false" />
+          </div>
+        </div>
+
+        <!-- 地址 -->
+        <div class="form-row">
+          <div class="row-label">地址 *</div>
+          <div class="row-content">
+            <van-field v-model="addressText" is-link readonly placeholder="请选择省份/城市/大学" @click="showAddressPicker = true" :border="false" />
+          </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+          <van-button round block type="primary" size="large" @click="onRegisterClick" :loading="registerLoading">注册并进入</van-button>
+        </div>
+      </div>
+      <div class="auth-switch">
+        已有用户名？<a @click="currentPage = 'login'">去登录</a>
+      </div>
+    </div>
+
+    <!-- ===== 地址三级联动选择器 ===== -->
+    <van-popup v-model:show="showAddressPicker" position="bottom" round>
+      <van-picker
+        :columns="addressColumns"
+        @confirm="onAddressConfirm"
+        @cancel="showAddressPicker = false"
+        :visible-item-count="5"
+        title="选择地址"
+      />
+    </van-popup>
+
+    <!-- ===== 盲盒开启动画 ===== -->
+    <div class="blindbox-overlay" v-if="showBlindBox" @click="onBlindBoxClick">
+      <div class="blindbox-particles">
+        <div v-for="p in blindBoxParticles" :key="p.id"
+          class="blindbox-particle" :class="{ active: p.active }"
+          :style="{
+            left: p.x + '%', top: p.y + '%',
+            width: p.size + 'px', height: p.size + 'px',
+            background: p.color,
+            '--tx': p.tx + 'px', '--ty': p.ty + 'px',
+            animationDelay: p.delay + 'ms'
+          }">
+        </div>
+      </div>
+      <div class="blindbox-container" :class="{ 'blindbox-pick': blindBoxType === 'pick' }" v-if="!blindBoxShowResult">
+        <div class="blindbox-box" :class="{ shaking: blindBoxShaking, opening: blindBoxOpening }">
+          <div class="blindbox-lid">
+            <span v-if="blindBoxType === 'write'">✍️</span>
+            <span v-else>🎯</span>
+          </div>
+          <div class="blindbox-body">
+            <span class="blindbox-question" v-if="!blindBoxOpening">?</span>
+          </div>
+        </div>
+        <div class="blindbox-light" :class="{ active: blindBoxLightActive }"></div>
+        <div class="blindbox-sparkles" v-if="blindBoxSparkles">
+          <span v-for="s in blindBoxSparkleList" :key="s.id"
+            class="sparkle" :class="{ active: s.active }"
+            :style="{
+              left: s.x + 'px', top: s.y + 'px',
+              '--sx': s.sx + 'px', '--sy': s.sy + 'px',
+              animationDelay: s.delay + 'ms'
+            }">{{ s.emoji }}</span>
+        </div>
+      </div>
+      <div class="blindbox-result-card" :class="{ active: blindBoxShowResult }" v-if="blindBoxShowResult" @click.stop>
+        <div class="result-card-icon">{{ blindBoxType === 'write' ? '✍️' : '🎯' }}</div>
+        <div class="result-card-title">{{ blindBoxType === 'write' ? '写纸团盲盒' : '拾纸团盲盒' }}</div>
+        <div class="result-card-desc">{{ blindBoxType === 'write' ? '盲盒已开启，即将进入书写界面...' : '盲盒已开启，即将进入匹配界面...' }}</div>
+      </div>
+      <div class="blindbox-label" v-if="!blindBoxShaking && !blindBoxOpening && !blindBoxShowResult">
+        {{ blindBoxType === 'write' ? '🎁 写纸团盲盒' : '🎯 拾纸团盲盒' }}
+      </div>
+      <div class="blindbox-hint" v-if="!blindBoxShaking && !blindBoxOpening && !blindBoxShowResult">点击盲盒开启</div>
+      <div class="blindbox-label" v-if="blindBoxShaking && !blindBoxOpening && !blindBoxShowResult">
+        {{ blindBoxType === 'write' ? '🎁 盲盒摇晃中...' : '🎯 盲盒摇晃中...' }}
+      </div>
+    </div>
+
+    <!-- ===== 主页 ===== -->
+    <div class="main-page" v-if="currentPage === 'main'">
+      <div class="main-header">
+        <h1>The Player · {{ userInfo.nickname }}</h1>
+        <p>每一次拆盒，都是一场惊喜</p>
+      </div>
+      <div class="main-actions">
+        <van-button class="action-btn btn-write" :class="{ 'btn-cooling': writeChances === 0 }" @click="onWriteClick(false)" :disabled="writeChances === 0">
+          <span class="btn-main-text">🎁 写纸团盲盒</span>
+          <span class="btn-sub-text" v-if="writeChances > 0">剩余 {{ writeChances }} 次</span>
+          <span class="btn-countdown-text" v-if="writeCountdown > 0">⏳ 冷却中 {{ formatCountdown(writeCountdown) }} 后恢复1次</span>
+        </van-button>
+        <van-button class="action-btn btn-pick" :class="{ 'btn-cooling': pickChances === 0 }" @click="onPickClick" :loading="pickLoading" :disabled="pickChances === 0">
+          <span class="btn-main-text">🎯 拾纸团盲盒</span>
+          <span class="btn-sub-text" v-if="pickChances > 0">剩余 {{ pickChances }} 次</span>
+          <span class="btn-countdown-text" v-if="pickCountdown > 0">⏳ 冷却中 {{ formatCountdown(pickCountdown) }} 后恢复1次</span>
+        </van-button>
+        <van-button class="action-btn btn-workflow" :class="{ 'btn-cooling': pickChances === 0 }" @click="onSmartPickClick" :loading="pickLoading" :disabled="pickChances === 0">
+          <span class="btn-main-text">✨ 智能全流程</span>
+          <span class="btn-sub-text">匹配 + 画像 + 破冰 + 审批</span>
+        </van-button>
+        <van-button class="action-btn btn-history" @click="openHistory">📋 历史记录</van-button>
+      </div>
+
+      <div class="task-card">
+        <div class="task-card-title">🎮 增加次数</div>
+        <div class="task-item">
+          <div class="task-icon">📅</div>
+          <div class="task-info">
+            <div class="task-name">每日签到</div>
+            <div class="task-desc">每日签到一次，获取额外使用次数</div>
+            <div class="task-reward">🎁 奖励：写纸团+1  拾纸团+1</div>
+          </div>
+          <button class="task-btn task-btn-checkin" v-if="!checkedIn" @click="onCheckin">签到</button>
+          <button class="task-btn task-btn-done" v-else>已签到</button>
+        </div>
+        <div class="task-item">
+          <div class="task-icon">👥</div>
+          <div class="task-info">
+            <div class="task-name">邀请好友</div>
+            <div class="task-desc">分享链接给好友，每日限领3次</div>
+            <div class="task-reward">🎁 奖励：拾纸团+1（今日剩余{{ inviteRemaining }}次）</div>
+          </div>
+          <button class="task-btn task-btn-invite" v-if="inviteRemaining > 0" @click="onInvite">邀请</button>
+          <button class="task-btn task-btn-done" v-else>已用完</button>
+        </div>
+        <div class="task-item">
+          <div class="task-icon">✍️</div>
+          <div class="task-info">
+            <div class="task-name">写纸团奖励</div>
+            <div class="task-desc">完成写纸团后拾纸团次数+1，每日最多3次</div>
+            <div class="task-reward">🎁 奖励：拾纸团+1（今日剩余{{ writeBonusRemaining }}次）</div>
+          </div>
+          <button class="task-btn task-btn-write-bonus" v-if="writeBonusRemaining > 0" @click="onWriteClick(true)">写纸团</button>
+          <button class="task-btn task-btn-done" v-else>已用完</button>
+        </div>
+
+      </div>
+
+      <div class="feedback-entry" @click="showFeedback = true">
+        <span>💬 问题反馈</span>
+        <span style="font-size: 12px; color: #8e8e93;">遇到问题？加入QQ群交流</span>
+      </div>
+
+      <van-button class="exit-btn" plain type="default" size="small" @click="exitLogin">退出登录</van-button>
+    </div>
+
+
+
+    <!-- ===== 写纸团弹窗 ===== -->
+    <van-popup v-model:show="showWritePopup" position="bottom" round>
+      <div style="padding: 20px 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div style="font-size: 18px; font-weight: bold;">✍️ 写纸团</div>
+          <button class="content-gen-btn" @click="loadContentSuggestions" :disabled="contentGenLoading">
+            <span v-if="!contentGenLoading">✨ AI生成</span>
+            <span v-else>生成中...</span>
+          </button>
+        </div>
+        <div v-if="contentSuggestions.length > 0" class="content-suggestions">
+          <div v-for="(item, idx) in contentSuggestions" :key="idx" class="content-suggestion-item" @click="selectAiContentSuggestion(item)">
+            <span class="suggestion-style">{{ item.style }}</span>
+            <span class="suggestion-text">{{ item.content }}</span>
+          </div>
+        </div>
+        <div v-if="contentGenLoading" class="content-suggestions">
+          <div class="content-gen-loading-item">
+            <div class="content-gen-dot"></div>
+            <span>AI正在为你创作...</span>
+          </div>
+        </div>
+        <textarea
+          v-model="writeContent"
+          @input="onWriteContentInput"
+          placeholder="写下你想说的话..."
+          maxlength="200"
+          style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid rgba(180,175,165,0.4); border-radius: 8px; font-size: 14px; line-height: 1.6; resize: vertical; font-family: inherit; box-sizing: border-box; background: #fff; color: #2c2c2e;"
+        ></textarea>
+        <div style="text-align: right; font-size: 12px; color: #8e8e93; margin-top: 4px;">{{ writeContent.length }} / 200</div>
+        <div style="display: flex; gap: 12px; margin-top: 16px;">
+          <button style="flex: 1; padding: 10px 0; border-radius: 20px; border: 1px solid rgba(180,175,165,0.4); background: #fff; font-size: 16px; color: #6e6e73;" @click="showWritePopup = false; writeContent = ''; contentSuggestions = []; selectedAiContent = ''; selectedAiContentProof = ''; isBonusWrite = false">取消</button>
+          <button style="flex: 1; padding: 10px 0; border-radius: 20px; border: none; background: linear-gradient(135deg, #c9a87c, #b8976a); font-size: 16px; color: #fff; font-weight: bold;" @click="onWriteConfirm">🎯 抛出</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- ===== 拾纸团学校选择弹窗 ===== -->
+    <van-popup v-model:show="showPickPicker" position="bottom" round>
+      <van-picker
+        :columns="pickTargetColumns"
+        @confirm="onPickTargetConfirm"
+        @cancel="showPickPicker = false"
+        :visible-item-count="5"
+        title="选择想匹配的学校"
+      />
+    </van-popup>
+
+    <!-- ===== 拾纸团结果弹窗 ===== -->
+    <van-popup v-model:show="showPickResult" position="center" round :style="{ width: '90%', maxWidth: '400px' }">
+      <div class="pick-card" v-if="pickResult">
+        <div class="card-content">{{ pickResult.content }}</div>
+        <div class="card-user">
+          <div class="user-name">{{ pickResult.nickname }}</div>
+          <div class="user-info">{{ pickResult.gender }} · {{ pickResult.age }}岁</div>
+          <div class="user-info">{{ pickResult.province }} {{ pickResult.city }} {{ pickResult.university }}</div>
+          <div class="hobby-tags" v-if="pickResult.hobbies">
+            <span class="hobby-tag" v-for="hobby in pickResult.hobbies.split(',')" :key="hobby">{{ hobby }}</span>
+          </div>
+          <div class="user-info" v-if="pickResult.contact_type && pickResult.contact_value">{{ pickResult.contact_type }}：{{ pickResult.contact_value }}</div>
+          <div v-if="pickResult.matchReason" style="margin-top: 8px; padding: 6px 10px; background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border-radius: 8px; font-size: 12px; color: #2e7d32; text-align: center;">
+            🤖 智能匹配：{{ pickResult.matchReason }}
+          </div>
+          <div v-if="pickResult.matchLevel && pickResult.matchLevel !== 'university'" style="margin-top: 6px; padding: 6px 10px; background: #fff8e1; border-radius: 8px; font-size: 12px; color: #f57c00; text-align: center;">
+            <span v-if="pickResult.matchLevel === 'city'">📍 该学校暂无纸团，已匹配同城市其他学校</span>
+            <span v-if="pickResult.matchLevel === 'province'">📍 该城市暂无纸团，已匹配同省份其他城市</span>
+            <span v-if="pickResult.matchLevel === 'nationwide'">📍 该省份暂无纸团，已匹配全国其他地区</span>
+          </div>
+        </div>
+        <div style="margin-top: 20px; text-align: center; display: flex; gap: 10px;">
+          <van-button round type="default" size="small" @click="showPickResult = false" style="flex: 1;">关闭</van-button>
+          <van-button round type="primary" size="small" @click="onSendMessage" style="flex: 1;">💬 发消息</van-button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- ===== 可恢复 Agent 工作流审批弹窗 ===== -->
+    <van-popup v-model:show="showSmartPickApproval" position="center" round :style="{ width: '92%', maxWidth: '420px' }">
+      <div class="pick-card" v-if="smartPickRun && smartPickRun.match && smartPickRun.match.best_match">
+        <div style="font-size: 13px; color: #8e8e93; margin-bottom: 10px; text-align: center;">
+          Agent 已完成匹配和破冰建议生成，请确认一条审核通过的内容
+        </div>
+        <div class="card-content">{{ smartPickRun.match.best_match.content }}</div>
+        <div class="card-user">
+          <div class="user-name">{{ smartPickRun.match.best_match.nickname }}</div>
+          <div class="user-info">{{ smartPickRun.match.best_match.gender }} · {{ smartPickRun.match.best_match.age }}岁</div>
+          <div class="user-info">{{ smartPickRun.match.best_match.province }} {{ smartPickRun.match.best_match.city }} {{ smartPickRun.match.best_match.university }}</div>
+          <div class="hobby-tags" v-if="smartPickRun.match.best_match.hobbies">
+            <span class="hobby-tag" v-for="hobby in smartPickRun.match.best_match.hobbies.split(',')" :key="hobby">{{ hobby }}</span>
+          </div>
+          <div v-if="smartPickRun.match.match_reason" style="margin-top: 8px; padding: 6px 10px; background: #f3e8ff; border-radius: 8px; font-size: 12px; color: #7c3aed; text-align: center;">
+            🤖 {{ smartPickRun.match.match_reason }}
+          </div>
+        </div>
+        <div style="margin-top: 16px; font-size: 13px; font-weight: bold; color: #2c2c2e;">选择一条破冰建议</div>
+        <label v-for="hint in smartPickHints" :key="hint" style="display: flex; gap: 8px; align-items: flex-start; padding: 9px 10px; margin-top: 8px; border: 1px solid rgba(139,92,246,0.25); border-radius: 8px; background: #faf8ff; font-size: 13px; color: #4b5563; cursor: pointer;">
+          <input type="radio" v-model="smartPickSelectedHint" :value="hint" style="margin-top: 2px;" />
+          <span>{{ hint }}</span>
+        </label>
+        <div style="margin-top: 18px; display: flex; gap: 10px;">
+          <van-button round type="default" size="small" style="flex: 1;" @click="cancelSmartPick">取消</van-button>
+          <van-button round type="primary" size="small" style="flex: 1;" :loading="smartPickLoading" :disabled="!smartPickSelectedHint" @click="approveSmartPick">确认并完成</van-button>
+        </div>
+        <div style="margin-top: 10px; font-size: 11px; color: #9ca3af; text-align: center;">
+          请在本页选择一条建议，确认后进入聊天
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- ===== 邀请分享面板 ===== -->
+    <van-popup v-model:show="showSharePanel" position="bottom" round :style="{ background: '#f7f7f7' }">
+      <div style="padding: 20px 16px 30px;">
+        <div style="text-align: center; font-size: 16px; font-weight: bold; color: #2c2c2e; margin-bottom: 16px;">分享给好友</div>
+        <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+          <div class="share-icon-item" @click="onShareToApp('wechat')">
+            <div class="share-icon-circle" style="background: #07c160;"><span style="font-size: 24px;">💬</span></div>
+            <div style="font-size: 12px; color: #6e6e73; margin-top: 6px;">微信</div>
+          </div>
+          <div class="share-icon-item" @click="onShareToApp('qq')">
+            <div class="share-icon-circle" style="background: #12b7f5;"><span style="font-size: 24px;">🐧</span></div>
+            <div style="font-size: 12px; color: #6e6e73; margin-top: 6px;">QQ</div>
+          </div>
+          <div class="share-icon-item" @click="onShareToApp('weibo')">
+            <div class="share-icon-circle" style="background: #e6162d;"><span style="font-size: 24px;">📢</span></div>
+            <div style="font-size: 12px; color: #6e6e73; margin-top: 6px;">微博</div>
+          </div>
+          <div class="share-icon-item" @click="onShareToApp('copy')">
+            <div class="share-icon-circle" style="background: #8e8e93;"><span style="font-size: 24px;">📋</span></div>
+            <div style="font-size: 12px; color: #6e6e73; margin-top: 6px;">复制链接</div>
+          </div>
+        </div>
+        <div style="background: #fff; border-radius: 12px; padding: 12px; margin-bottom: 16px;">
+          <div style="font-size: 12px; color: #8e8e93; margin-bottom: 6px;">分享链接</div>
+          <div style="font-size: 13px; color: #2c2c2e; word-break: break-all; line-height: 1.5;">{{ shareLinkUrl }}</div>
+        </div>
+        <button style="width: 100%; padding: 12px; border-radius: 24px; border: none; background: linear-gradient(135deg, #c9a87c, #b8976a); color: #fff; font-size: 16px; font-weight: bold;" @click="onCopyShareLink">复制链接并发送</button>
+      </div>
+    </van-popup>
+
+    <!-- ===== 问题反馈弹窗 ===== -->
+    <van-popup v-model:show="showFeedback" position="center" round :style="{ width: '85%', maxWidth: '360px' }">
+      <div style="padding: 24px 20px; text-align: center;">
+        <div style="font-size: 20px; margin-bottom: 8px;">💬 问题反馈</div>
+        <div style="font-size: 14px; color: #6e6e73; margin-bottom: 20px;">遇到问题或有建议？加入QQ群与我们交流</div>
+        <div style="background: #f7f7f7; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+          <div style="font-size: 13px; color: #8e8e93; margin-bottom: 8px;">QQ群号</div>
+          <div style="font-size: 28px; font-weight: bold; color: #2c2c2e; letter-spacing: 2px;">157454878</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button style="flex: 1; padding: 10px; border-radius: 20px; border: 1px solid rgba(180,175,165,0.4); background: #fff; font-size: 15px; color: #6e6e73;" @click="showFeedback = false">关闭</button>
+          <button style="flex: 1; padding: 10px; border-radius: 20px; border: none; background: linear-gradient(135deg, #12b7f5, #0e9fdb); color: #fff; font-size: 15px; font-weight: bold;" @click="onCopyQQGroup">复制群号</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- ===== 历史记录页 ===== -->
+    <div class="history-page" v-if="currentPage === 'history'">
+      <div class="history-header">
+        <span class="history-back" @click="currentPage = 'main'">← 返回</span>
+        <h2>📋 历史记录</h2>
+      </div>
+
+      <div class="history-section">
+        <div class="history-section-title">✍️ 写纸团记录</div>
+        <div v-if="historyData.writeRecords.length === 0" class="history-empty">暂无写纸团记录</div>
+        <div class="history-item" v-for="item in historyData.writeRecords" :key="'w' + item.id">
+          <div class="item-content">{{ item.content }}</div>
+          <div class="item-meta">
+            <span>投放时间：{{ formatTime(item.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-section">
+        <div class="history-section-title">🎯 拾纸团记录</div>
+        <div v-if="historyData.pickRecords.length === 0" class="history-empty">暂无拾纸团记录</div>
+        <div class="history-item" v-for="(item, idx) in historyData.pickRecords" :key="'p' + idx">
+          <div class="item-content">{{ item.content }}</div>
+          <div class="item-meta">
+            <span style="font-weight: bold; font-size: 15px; color: #667eea; cursor: pointer;" @click="chatFromHistory(item)">{{ item.nickname }}</span>
+            <span>{{ item.gender }} · {{ item.age }}岁</span>
+            <span>{{ item.province }} {{ item.city }} {{ item.university }}</span>
+          </div>
+          <div class="hobby-tags" v-if="item.hobbies" style="margin-top: 4px;">
+            <span class="hobby-tag" v-for="hobby in item.hobbies.split(',')" :key="hobby">{{ hobby }}</span>
+          </div>
+          <div class="item-meta" v-if="item.contact_type && item.contact_value" style="margin-top: 4px;">
+            <span>{{ item.contact_type }}：{{ item.contact_value }}</span>
+          </div>
+          <div class="item-meta" style="margin-top: 4px;">
+            <span>拾取时间：{{ formatTime(item.pickedAt) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 对话消息列表页 ===== -->
+    <div class="chat-page" v-if="currentPage === 'chat'">
+      <div class="chat-header">
+        <span class="back-btn" @click="currentPage = 'main'">← 返回</span>
+        <h2>💬 对话消息</h2>
+      </div>
+      <div class="conv-list" v-if="conversations.length > 0">
+        <div class="conv-item" v-for="conv in conversations" :key="conv.id" @click="openChat(conv)">
+          <div class="conv-avatar">{{ (conv.targetNickname || '?')[0] }}</div>
+          <div class="conv-info">
+            <div class="conv-name">{{ conv.targetNickname }}</div>
+            <div class="conv-last-msg">{{ conv.lastMessage || '暂无消息' }}</div>
+          </div>
+          <div class="conv-meta">
+            <div class="conv-time">{{ formatMsgTime(conv.lastMessageAt) }}</div>
+            <div class="conv-unread" v-if="conv.unreadCount > 0">{{ conv.unreadCount }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="conv-empty" v-else>
+        <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+        <div>暂无对话，去拾纸团找搭子聊天吧！</div>
+      </div>
+    </div>
+
+    <!-- ===== 聊天页 ===== -->
+    <div class="msg-page" v-if="currentPage === 'chatDetail'">
+      <div class="msg-header">
+        <span class="back-btn" @click="goBackToChatList">← 返回</span>
+        <div style="flex: 1; min-width: 0;">
+          <h2 style="margin-bottom: 4px;">{{ chatTarget.nickname }}</h2>
+          <div style="font-size: 12px; color: #999; line-height: 1.6;">
+            <div>{{ chatTarget.gender }} · {{ chatTarget.age }}岁</div>
+            <div v-if="chatTarget.province || chatTarget.city || chatTarget.university">📍 {{ chatTarget.province }} {{ chatTarget.city }} {{ chatTarget.university }}</div>
+            <div v-if="chatTarget.hobbies">
+              <span v-for="h in chatTarget.hobbies.split(',')" :key="h" style="display: inline-block; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 1px 8px; border-radius: 10px; font-size: 11px; margin: 2px 2px;">{{ h }}</span>
+            </div>
+            <div v-if="chatTarget.contactType && chatTarget.contactValue">{{ chatTarget.contactType }}：{{ chatTarget.contactValue }}</div>
+          </div>
+        </div>
+      </div>
+      <div class="msg-list" ref="msgListRef">
+        <div v-if="chatMessages.length === 0" class="msg-empty">
+          <div style="font-size: 36px; margin-bottom: 8px;">👋</div>
+          <div>打个招呼吧！</div>
+        </div>
+        <template v-for="(msg, idx) in chatMessages" :key="msg.id">
+          <div class="msg-time-label" v-if="idx === 0 || shouldShowTime(idx)">{{ formatMsgTime(msg.createdAt) }}</div>
+          <div class="msg-bubble-wrap" :class="msg.senderId === userInfo.userId ? 'sent' : 'received'">
+            <div class="msg-bubble">{{ msg.content }}</div>
+          </div>
+        </template>
+      </div>
+      <div class="msg-input-bar">
+        <div v-if="iceBreakHints.length > 0" class="ice-break-panel">
+          <div class="ice-break-panel-header">
+            <span>💬 AI智能消息</span>
+            <span class="ice-break-close" @click="iceBreakHints = []">✕</span>
+          </div>
+          <div class="ice-break-list">
+            <div v-for="(hint, idx) in iceBreakHints" :key="idx" class="ice-break-item" @click="useAiHint(hint)">
+              <span class="ice-break-item-icon">{{ ['💬', '✨', '🎯'][idx] }}</span>
+              <span class="ice-break-item-text">{{ hint }}</span>
+            </div>
+          </div>
+        </div>
+        <div v-if="iceBreakLoading" class="ice-break-panel">
+          <div class="ice-break-panel-header">
+            <span>💬 AI智能消息</span>
+          </div>
+          <div class="ice-break-list">
+            <div class="ice-break-loading-item">
+              <div class="ice-break-dot-flashing"></div>
+              <span>AI正在生成消息...</span>
+            </div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input v-model="chatInput" placeholder="输入消息..." @keyup.enter="sendChatMessage" />
+          <button class="msg-send-btn" @click="sendChatMessage">发送</button>
+          <button class="ice-break-btn" @click="loadIceBreakHints" :disabled="iceBreakLoading">
+            <span class="ice-break-btn-icon">💬</span>
+            <span class="ice-break-btn-text">刷新AI消息</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 底部导航栏 ===== -->
+    <div class="bottom-nav" v-if="['main', 'chat', 'plaza'].includes(currentPage)">
+      <div class="nav-item" :class="{ active: currentPage === 'main' }" @click="currentPage = 'main'">
+        <span class="nav-icon">🏠</span>
+        <span>首页</span>
+      </div>
+      <div class="nav-item" :class="{ active: currentPage === 'plaza' }" @click="openPlaza">
+        <span class="nav-icon">🌆</span>
+        <span>广场</span>
+      </div>
+      <div class="nav-item" :class="{ active: currentPage === 'chat' }" @click="openChatList">
+        <span class="nav-icon">💬</span>
+        <span>消息</span>
+        <span class="nav-badge" v-if="totalUnread > 0">{{ totalUnread }}</span>
+      </div>
+    </div>
+
+    <!-- ===== AI助手悬浮入口（主页右侧） ===== -->
+    <div class="ai-float-btn" v-if="currentPage === 'main'" @click="currentPage = 'aiChat'">
+      <span class="ai-float-icon">🤖</span>
+      <span class="ai-float-label">AI助手</span>
+    </div>
+
+    <!-- ===== AI聊天页面 ===== -->
+    <div class="ai-chat-page" v-if="currentPage === 'aiChat'">
+      <div class="ai-chat-header">
+        <span class="back-btn" @click="currentPage = 'main'">← 返回</span>
+        <h2>🤖 AI助手</h2>
+        <span class="mcp-badge">MCP</span>
+      </div>
+      <div class="ai-chat-messages" ref="aiChatMsgRef">
+        <!-- 欢迎界面 -->
+        <div class="ai-chat-welcome" v-if="aiChatMessages.length === 0">
+          <div class="ai-chat-welcome-icon">🤖</div>
+          <div class="ai-chat-welcome-title">AI热点助手</div>
+          <div class="ai-chat-welcome-desc">
+            我可以帮你查询全网热点趋势资讯！<br>
+            微博热搜、知乎热榜、B站排行、抖音热搜...<br>
+            试试问我吧！
+          </div>
+          <div class="ai-chat-quick-actions">
+            <button class="ai-chat-quick-btn" @click="sendAiChat('今天微博有什么热搜？')">微博热搜</button>
+            <button class="ai-chat-quick-btn" @click="sendAiChat('知乎今天有什么热门话题？')">知乎热榜</button>
+            <button class="ai-chat-quick-btn" @click="sendAiChat('B站有什么热门视频？')">B站排行</button>
+            <button class="ai-chat-quick-btn" @click="sendAiChat('抖音最近有什么热门？')">抖音热搜</button>
+            <button class="ai-chat-quick-btn" @click="sendAiChat('今天有什么科技新闻？')">科技新闻</button>
+            <button class="ai-chat-quick-btn" @click="sendAiChat('36氪有什么创业资讯？')">36氪热榜</button>
+          </div>
+        </div>
+        <!-- 消息列表 -->
+        <template v-for="(msg, idx) in aiChatMessages" :key="idx">
+          <div class="ai-msg-wrap" :class="msg.role">
+            <div class="ai-msg-avatar" v-if="msg.role === 'assistant'">🤖</div>
+            <div class="ai-msg-bubble">
+              <div v-if="msg.toolBadge" class="ai-msg-tool-badge">{{ msg.toolBadge }}</div>
+              <div v-if="msg.loading" class="ai-msg-loading">
+                <div class="ai-msg-loading-dot"></div>
+                <div class="ai-msg-loading-dot"></div>
+                <div class="ai-msg-loading-dot"></div>
+                <span style="margin-left: 4px; font-size: 13px; color: #8e8e93;">{{ msg.loadingText || '思考中...' }}</span>
+              </div>
+              <div v-else style="white-space: pre-wrap;">{{ msg.content }}</div>
+            </div>
+          </div>
+        </template>
+      </div>
+      <div class="ai-chat-input-bar">
+        <div class="ai-chat-input-row">
+          <input v-model="aiChatInput" placeholder="问我任何热点话题..." @keyup.enter="sendAiChat()" :disabled="aiChatLoading" />
+          <button class="ai-chat-send-btn" @click="sendAiChat()" :disabled="aiChatLoading || !aiChatInput.trim()">发送</button>
+        </div>
+        <div class="ai-chat-status" v-if="aiChatLoading">{{ aiChatStatus }}</div>
+      </div>
+    </div>
+
+    <!-- ===== 广场页面 ===== -->
+    <div class="plaza-page" v-if="currentPage === 'plaza'">
+      <div class="plaza-header">
+        <h2>🌆 广场</h2>
+        <button class="plaza-publish-btn" @click="showPostPopup = true">✍️ 发布</button>
+      </div>
+      <div class="plaza-list" v-if="plazaPosts.length > 0">
+        <div class="plaza-post-card" v-for="post in plazaPosts" :key="post.postId">
+          <div class="post-user-info">
+            <span class="post-avatar">{{ post.nickname ? post.nickname[0] : '匿' }}</span>
+            <div class="post-user-meta">
+              <div class="post-nickname">{{ post.nickname || '匿名用户' }}</div>
+              <div class="post-time">{{ post.createdAt }}</div>
+            </div>
+          </div>
+          <div class="post-content">{{ post.content }}</div>
+          <div class="post-media" v-if="post.mediaUrls && post.mediaUrls.length > 0">
+            <img v-for="(url, idx) in post.mediaUrls" :key="idx" :src="url" class="post-image" v-if="post.mediaType === 'image'" />
+            <video v-for="(url, idx) in post.mediaUrls" :key="idx" :src="url" class="post-video" controls v-if="post.mediaType === 'video'"></video>
+          </div>
+          <div class="post-actions">
+            <span class="post-action" :class="{ liked: post.liked }" @click="togglePostLike(post)">
+              {{ post.liked ? '❤️' : '🤍' }} {{ post.likeCount }}
+            </span>
+            <span class="post-action" @click="openComments(post)">
+              💬 {{ post.commentCount }}
+            </span>
+          </div>
+        </div>
+        <div class="plaza-load-more" v-if="plazaHasMore" @click="loadMorePosts">
+          {{ plazaLoading ? '加载中...' : '加载更多' }}
+        </div>
+        <div class="plaza-no-more" v-else>没有更多了</div>
+      </div>
+      <div class="plaza-empty" v-else-if="!plazaLoading">
+        <div class="plaza-empty-icon">🌅</div>
+        <p>广场还很安静，快来发布第一条动态吧！</p>
+      </div>
+      <div class="plaza-loading" v-else>
+        <van-loading type="spinner" color="#8a7a60">加载中...</van-loading>
+      </div>
+    </div>
+
+    <!-- ===== 发布动态弹窗 ===== -->
+    <van-popup v-model:show="showPostPopup" position="bottom" round :style="{ height: '65%' }">
+      <div class="post-popup-content">
+        <div class="post-popup-title">✍️ 发布动态</div>
+        <textarea
+          v-model="newPostContent"
+          placeholder="分享你的想法..."
+          maxlength="500"
+          class="post-popup-textarea"
+        ></textarea>
+        <div class="post-popup-counter">{{ newPostContent.length }} / 500</div>
+
+        <!-- 已选附件预览区 -->
+        <div class="post-popup-preview" v-if="newPostMediaList.length > 0">
+          <div class="preview-item" v-for="(media, idx) in newPostMediaList" :key="idx">
+            <img v-if="media.type === 'image'" :src="media.url" class="preview-img" />
+            <video v-else :src="media.url" class="preview-video"></video>
+            <span class="preview-remove" @click="removeMedia(idx)">✕</span>
+            <span class="preview-loading" v-if="media.uploading">上传中...</span>
+          </div>
+        </div>
+
+        <!-- 上传按钮 + 操作区 -->
+        <div class="post-popup-toolbar">
+          <div class="upload-btn" @click="triggerFileInput">
+            <span class="upload-icon">+</span>
+            <span class="upload-label">图片/视频</span>
+          </div>
+          <input
+            type="file"
+            ref="fileInputRef"
+            style="display:none"
+            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+            multiple
+            @change="handleFileSelect"
+          />
+        </div>
+
+        <div class="post-popup-buttons">
+          <button class="post-popup-cancel" @click="cancelPost">取消</button>
+          <button class="post-popup-submit" @click="publishPost" :disabled="(!newPostContent.trim() && newPostMediaList.length === 0) || plazaPublishing">
+            {{ plazaPublishing ? '发布中...' : '发布' }}
+          </button>
+        </div>
+
+        <!-- 发布失败重试提示 -->
+        <div class="post-popup-error" v-if="postErrorMessage">
+          <span>{{ postErrorMessage }}</span>
+          <button class="retry-btn" @click="publishPost" v-if="!plazaPublishing">重试</button>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- ===== 评论弹窗 ===== -->
+    <van-popup v-model:show="showCommentPopup" position="bottom" round :style="{ height: '70%' }">
+      <div class="comment-popup-content">
+        <div class="comment-popup-title">💬 评论 ({{ currentComments.length }})</div>
+        <div class="comment-list">
+          <div class="comment-item" v-for="comment in currentComments" :key="comment.commentId">
+            <span class="comment-avatar">{{ comment.nickname ? comment.nickname[0] : '匿' }}</span>
+            <div class="comment-body">
+              <div class="comment-nickname">{{ comment.nickname || '匿名用户' }}</div>
+              <div class="comment-text">{{ comment.content }}</div>
+              <div class="comment-time">{{ comment.createdAt }}</div>
+            </div>
+          </div>
+          <div class="comment-empty" v-if="currentComments.length === 0">还没有评论，快来抢沙发~</div>
+        </div>
+        <div class="comment-input-bar">
+          <input v-model="newCommentContent" placeholder="写评论..." @keyup.enter="publishComment" />
+          <button @click="publishComment" :disabled="!newCommentContent.trim()">发送</button>
+        </div>
+      </div>
+    </van-popup>
+
+  </div>
+
+  <!-- Vue 3 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/vue/3.4.21/vue.global.prod.min.js"></script>
+  <!-- Vant 4 -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/vant/4.8.4/vant.min.js"></script>
+
+  <script>
+    function createRequestId() {
+      if (window.crypto.randomUUID) return window.crypto.randomUUID();
+      const bytes = window.crypto.getRandomValues(new Uint8Array(16));
+      bytes[6] = (bytes[6] & 15) | 64;
+      bytes[8] = (bytes[8] & 63) | 128;
+      const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+      return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
+    }
+
+    // event 和 data 可以分散在不同网络数据块中，空行才标志一个完整事件。
+    function createSseParser(onEvent) {
+      let buffer = '';
+      let eventName = '';
+      let dataLines = [];
+      function dispatch() {
+        const name = eventName || 'message';
+        const data = dataLines.join('\n');
+        const hasData = dataLines.length > 0;
+        eventName = '';
+        dataLines = [];
+        if (hasData) onEvent(name, JSON.parse(data));
+      }
+      function processLine(rawLine) {
+        const line = rawLine.replace(/\r$/, '');
+        if (!line) {
+          dispatch();
+          return;
+        }
+        if (line.startsWith(':')) return;
+        const colon = line.indexOf(':');
+        const field = colon < 0 ? line : line.slice(0, colon);
+        const value = colon < 0 ? '' : line.slice(colon + 1).replace(/^ /, '');
+        if (field === 'event') eventName = value;
+        if (field === 'data') dataLines.push(value);
+      }
+      return {
+        push(chunk, finish = false) {
+          buffer += chunk;
+          let newline;
+          while ((newline = buffer.indexOf('\n')) !== -1) {
+            processLine(buffer.slice(0, newline));
+            buffer = buffer.slice(newline + 1);
+          }
+          if (finish) {
+            if (buffer) processLine(buffer);
+            buffer = '';
+            dispatch();
+          }
+        }
+      };
+    }
+
+    const { createApp, ref, reactive, onMounted, watch } = Vue;
+
+    const app = createApp({
+      setup() {
+        // 封装fetch函数，默认禁用浏览器缓存，确保每次都请求最新数据
+        // 重要：解决"AI生成内容不刷新"和"刷新AI消息内容不变化"的问题
+        const originalFetch = window.fetch.bind(window);  // 保存原始fetch
+        window.fetch = function(input, init) {
+          // 如果是字符串URL，自动追加时间戳参数破坏缓存
+          if (typeof input === 'string' && input.startsWith('/api/')) {
+            const separator = input.includes('?') ? '&' : '?';
+            input = input + separator + '_t=' + Date.now();
+          }
+          // 合并init配置，默认添加禁用缓存的请求头
+          const newInit = Object.assign({}, init || {});  // 浅拷贝原配置
+          newInit.cache = 'no-store';  // 明确禁用HTTP缓存
+          // 添加请求头防止304协商缓存
+          newInit.headers = Object.assign({ 'Cache-Control': 'no-store', 'Pragma': 'no-cache' }, newInit.headers || {});
+          return originalFetch(input, newInit);  // 调用原始fetch
+        };
+
+        const currentPage = ref('login');
+        const userInfo = reactive({ userId: null, nickname: '' });
+
+        // 带JWT认证的fetch封装：自动携带Authorization头，401时自动跳转登录
+        async function authFetch(url, options = {}) {
+          const token = localStorage.getItem('piaoToken');
+          if (token) {
+            if (!options.headers) options.headers = {};
+            options.headers['Authorization'] = 'Bearer ' + token;
+          }
+          const resp = await fetch(url, options);
+          // 401未认证：令牌过期或无效，清除本地存储并跳转登录页
+          if (resp.status === 401) {
+            localStorage.removeItem('piaoUserId');
+            localStorage.removeItem('piaoNickname');
+            localStorage.removeItem('piaoToken');
+            localStorage.removeItem('piaoToken');
+            userInfo.userId = null;
+            userInfo.nickname = '';
+            currentPage.value = 'login';
+            vant.showToast('登录已过期，请重新登录');
+            throw new Error('Unauthorized');
+          }
+          // 403权限不足：用户身份不匹配
+          if (resp.status === 403) {
+            const data = await resp.json().catch(() => ({}));
+            vant.showToast(data.detail || '无权操作');
+            throw new Error('Forbidden');
+          }
+          return resp;
+        }
+
+        const loginForm = reactive({
+          username: '',
+          password: ''
+        });
+        const loginLoading = ref(false);
+        const showLoginPwd = ref(false);
+        let dailyRefreshTimer = null;
+        let lastCheckedDate = '';
+        const showRegisterPwd = ref(false);
+
+        const form = reactive({
+          username: '',
+          password: '',
+          gender: '男',
+          age: '',
+          hobbies: [],
+          contactType: 'QQ号',
+          contactValue: '',
+          province: '',
+          city: '',
+          university: ''
+        });
+
+        const addressText = ref('');
+        const showAddressPicker = ref(false);
+        const universitiesData = ref({});
+        const addressColumns = ref([]);
+        const showWritePopup = ref(false);
+        const writeContent = ref('');
+        const contentSuggestions = ref([]);
+        const selectedAiContent = ref('');
+        const selectedAiContentProof = ref('');
+        const contentGenLoading = ref(false);
+        // 只在当前页面保留各用户最近展示的文案，不保存 AI 来源凭证。
+        const contentSuggestionHistory = new Map();
+        const pickLoading = ref(false);
+        const showPickResult = ref(false);
+        const pickResult = ref(null);
+        const showPickPicker = ref(false);
+        const pickTargetColumns = ref([]);
+        const pickTarget = reactive({ province: '', city: '', university: '', text: '' });
+        let pickMode = 'legacy';
+        const showSmartPickApproval = ref(false);
+        const smartPickRun = ref(null);
+        const smartPickHints = ref([]);
+        const smartPickSelectedHint = ref('');
+        const smartPickLoading = ref(false);
+        const showBlindBox = ref(false);
+        const blindBoxType = ref('write');
+        const blindBoxOpening = ref(false);
+        const blindBoxShaking = ref(false);
+        const blindBoxLightActive = ref(false);
+        const blindBoxShowResult = ref(false);
+        const blindBoxSparkles = ref(false);
+        const blindBoxCallback = ref(null);
+        const blindBoxParticles = ref([]);
+        const blindBoxSparkleList = ref([]);
+        const registerLoading = ref(false);
+        const historyData = reactive({
+          writeRecords: [],
+          pickRecords: []
+        });
+
+        const writeChances = ref(1);
+        const pickChances = ref(1);
+        const writeCountdown = ref(0);
+        const pickCountdown = ref(0);
+        let writeTimer = null;
+        let pickTimer = null;
+        const checkedIn = ref(false);
+        const inviteRemaining = ref(3);
+        const showSharePanel = ref(false);
+        const showFeedback = ref(false);
+        const shareLinkUrl = ref('');
+        const writeBonusUsed = ref(0);
+        const writeBonusRemaining = ref(3);
+        const isBonusWrite = ref(false);
+
+        const conversations = ref([]);
+        const totalUnread = ref(0);
+        const chatTarget = reactive({ id: null, nickname: '', gender: '', age: 0, hobbies: '', province: '', city: '', university: '', contactType: '', contactValue: '', conversationId: null });
+        const chatMessages = ref([]);
+        const chatInput = ref('');
+        const msgListRef = ref(null);
+        const iceBreakHints = ref([]);
+        const iceBreakLoading = ref(false);
+        let iceBreakActiveRequest = null;
+        let iceBreakAbortController = null;
+
+        // AI聊天相关状态
+        const aiChatMessages = ref([]);  // AI聊天消息列表
+        const aiChatInput = ref('');  // AI聊天输入框
+        const aiChatLoading = ref(false);  // AI聊天加载状态
+        const aiChatStatus = ref('');  // AI聊天状态文字
+        const aiChatMsgRef = ref(null);  // AI聊天消息列表DOM引用
+
+        // ===== 广场模块响应式数据 =====
+        const plazaPosts = ref([]);  // 广场动态列表
+        const plazaLoading = ref(false);  // 广场加载状态
+        const plazaPage = ref(1);  // 当前页码
+        const plazaHasMore = ref(true);  // 是否还有更多
+        const showPostPopup = ref(false);  // 发布动态弹窗
+        const newPostContent = ref('');  // 新动态文字内容
+        const plazaPublishing = ref(false);  // 发布中状态
+        const showCommentPopup = ref(false);  // 评论弹窗
+        const currentComments = ref([]);  // 当前动态的评论列表
+        const newCommentContent = ref('');  // 新评论内容
+        const currentCommentPostId = ref(0);  // 当前查看评论的动态ID
+        const newPostMediaList = ref([]);  // 已选附件列表 [{url, type, uploading}]
+        const fileInputRef = ref(null);  // 文件输入框DOM引用
+        const postErrorMessage = ref('');  // 发布失败错误信息
+
+        /** 打开广场页面，加载动态列表 */
+        async function openPlaza() {
+          currentPage.value = 'plaza';
+          plazaPage.value = 1;
+          plazaPosts.value = [];
+          plazaHasMore.value = true;
+          await loadPlazaPosts();
+        }
+
+        /** 加载广场动态列表 */
+        async function loadPlazaPosts() {
+          if (plazaLoading.value) return;
+          plazaLoading.value = true;
+          try {
+            const res = await fetch(`/api/plaza/posts?page=${plazaPage.value}&pageSize=10`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('piaoToken')}` }
+            });
+            const data = await res.json();
+            if (data.posts) {
+              plazaPosts.value.push(...data.posts);
+              plazaHasMore.value = plazaPosts.value.length < data.total;
+            }
+          } catch (e) {
+            console.error('加载广场动态失败:', e);
+          } finally {
+            plazaLoading.value = false;
+          }
+        }
+
+        /** 加载更多动态 */
+        async function loadMorePosts() {
+          plazaPage.value++;
+          await loadPlazaPosts();
+        }
+
+        /** 触发文件选择器 */
+        function triggerFileInput() {
+          fileInputRef.value?.click();
+        }
+
+        /** 处理文件选择：读取文件并上传到服务器 */
+        async function handleFileSelect(event) {
+          const files = event.target.files;
+          if (!files || files.length === 0) return;
+
+          for (const file of files) {
+            // 校验文件类型
+            const isImage = file.type.startsWith('image/');
+            const isVideo = file.type.startsWith('video/');
+            if (!isImage && !isVideo) {
+              vant.showToast(`不支持的文件类型：${file.name}`);
+              continue;
+            }
+
+            // 校验文件大小
+            const maxSize = isImage ? 10 * 1024 * 1024 : 50 * 1024 * 1024;
+            const maxLabel = isImage ? '10MB' : '50MB';
+            if (file.size > maxSize) {
+              vant.showToast(`${file.name}超过${maxLabel}限制`);
+              continue;
+            }
+
+            // 创建本地预览URL
+            const localUrl = URL.createObjectURL(file);
+            const mediaItem = {
+              url: localUrl,  // 本地预览URL（上传后替换为服务器URL）
+              type: isImage ? 'image' : 'video',
+              uploading: true,  // 上传中状态
+              serverUrl: null,  // 上传成功后的服务器URL
+            };
+            newPostMediaList.value.push(mediaItem);
+            const itemIndex = newPostMediaList.value.length - 1;
+
+            // 上传文件到服务器
+            try {
+              const formData = new FormData();
+              formData.append('file', file);
+              const res = await fetch('/api/plaza/upload', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('piaoToken')}` },
+                body: formData,
+              });
+              const data = await res.json();
+              if (data.success) {
+                newPostMediaList.value[itemIndex].serverUrl = data.url;
+                newPostMediaList.value[itemIndex].uploading = false;
+              } else {
+                // 上传失败，移除该项
+                newPostMediaList.value.splice(itemIndex, 1);
+                vant.showToast(data.detail || data.message || '文件上传失败');
+              }
+            } catch (e) {
+              newPostMediaList.value.splice(itemIndex, 1);
+              vant.showToast('文件上传失败，请重试');
+            }
+          }
+
+          // 清空input值，允许重复选择同一文件
+          event.target.value = '';
+        }
+
+        /** 移除已选附件 */
+        function removeMedia(idx) {
+          const media = newPostMediaList.value[idx];
+          if (media && media.url.startsWith('blob:')) {
+            URL.revokeObjectURL(media.url);  // 释放本地预览URL内存
+          }
+          newPostMediaList.value.splice(idx, 1);
+        }
+
+        /** 取消发布，清空所有数据 */
+        function cancelPost() {
+          // 释放本地预览URL内存
+          newPostMediaList.value.forEach(m => {
+            if (m.url.startsWith('blob:')) URL.revokeObjectURL(m.url);
+          });
+          showPostPopup.value = false;
+          newPostContent.value = '';
+          newPostMediaList.value = [];
+          postErrorMessage.value = '';
+        }
+
+        /** 发布动态 */
+        async function publishPost() {
+          // 校验：文字和附件至少有一个
+          const hasContent = newPostContent.value.trim();
+          const hasMedia = newPostMediaList.value.length > 0;
+          if (!hasContent && !hasMedia) {
+            vant.showToast('请输入内容或添加图片/视频');
+            return;
+          }
+
+          // 检查是否有文件还在上传中
+          const stillUploading = newPostMediaList.value.some(m => m.uploading);
+          if (stillUploading) {
+            vant.showToast('请等待文件上传完成');
+            return;
+          }
+
+          plazaPublishing.value = true;
+          postErrorMessage.value = '';
+
+          try {
+            // 收集已上传的服务器URL
+            const mediaUrls = newPostMediaList.value
+              .filter(m => m.serverUrl)
+              .map(m => m.serverUrl);
+
+            const userId = parseInt(localStorage.getItem('piaoUserId'));
+            if (!userId || isNaN(userId)) {
+              postErrorMessage.value = '登录状态异常，请重新登录';
+              plazaPublishing.value = false;
+              return;
+            }
+
+            const res = await fetch('/api/plaza/posts', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('piaoToken')}`
+              },
+              body: JSON.stringify({
+                userId: userId,
+                content: newPostContent.value.trim(),
+                mediaUrls: mediaUrls,
+              })
+            });
+
+            if (!res.ok) {
+              const errorData = await res.json().catch(() => ({}));
+              throw new Error(errorData.detail || `服务器错误(${res.status})`);
+            }
+
+            const data = await res.json();
+            if (data.success) {
+              // 发布成功，清空数据
+              newPostMediaList.value.forEach(m => {
+                if (m.url.startsWith('blob:')) URL.revokeObjectURL(m.url);
+              });
+              showPostPopup.value = false;
+              newPostContent.value = '';
+              newPostMediaList.value = [];
+              postErrorMessage.value = '';
+              // 刷新广场列表
+              plazaPage.value = 1;
+              plazaPosts.value = [];
+              plazaHasMore.value = true;
+              await loadPlazaPosts();
+              vant.showToast('发布成功');
+            } else {
+              postErrorMessage.value = data.message || '发布失败，请重试';
+            }
+          } catch (e) {
+            console.error('发布动态失败:', e);
+            postErrorMessage.value = e.message || '网络异常，请检查网络后重试';
+          } finally {
+            plazaPublishing.value = false;
+          }
+        }
+
+        /** 点赞/取消点赞 */
+        async function togglePostLike(post) {
+          try {
+            const res = await fetch(`/api/plaza/posts/${post.postId}/like`, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('piaoToken')}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+              post.liked = data.liked;
+              post.likeCount = data.likeCount;
+            }
+          } catch (e) {
+            vant.showToast('操作失败');
+          }
+        }
+
+        /** 打开评论弹窗 */
+        async function openComments(post) {
+          currentCommentPostId.value = post.postId;
+          showCommentPopup.value = true;
+          newCommentContent.value = '';
+          await loadComments(post.postId);
+        }
+
+        /** 加载评论列表 */
+        async function loadComments(postId) {
+          try {
+            const res = await fetch(`/api/plaza/posts/${postId}/comments`, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('piaoToken')}` }
+            });
+            const data = await res.json();
+            currentComments.value = data.comments || [];
+          } catch (e) {
+            console.error('加载评论失败:', e);
+          }
+        }
+
+        /** 发表评论 */
+        async function publishComment() {
+          if (!newCommentContent.value.trim()) return;
+          try {
+            const res = await fetch(`/api/plaza/posts/${currentCommentPostId.value}/comments`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('piaoToken')}`
+              },
+              body: JSON.stringify({
+                userId: parseInt(localStorage.getItem('piaoUserId')),
+                content: newCommentContent.value.trim()
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              newCommentContent.value = '';
+              await loadComments(currentCommentPostId.value);
+              // 更新动态列表中的评论数
+              const post = plazaPosts.value.find(p => p.postId === currentCommentPostId.value);
+              if (post) post.commentCount++;
+            } else {
+              vant.showToast(data.message || '评论失败');
+            }
+          } catch (e) {
+            vant.showToast('评论失败');
+          }
+        }
+
+
+        onMounted(async () => {
+          const savedUserId = localStorage.getItem('piaoUserId');
+          const savedNickname = localStorage.getItem('piaoNickname');
+          if (savedUserId && savedNickname) {
+            userInfo.userId = parseInt(savedUserId);
+            userInfo.nickname = savedNickname;
+            try {
+              const resp = await authFetch(`/api/user-chances?userId=${userInfo.userId}`);
+              const data = await resp.json();
+              if (resp.ok) {
+                writeChances.value = data.writeChances;
+                pickChances.value = data.pickChances;
+
+                // 恢复写纸团冷却倒计时
+                const now = Date.now();
+                const writeCooldownStart = localStorage.getItem('piaoWriteCooldownStart_' + userInfo.userId);
+                if (writeCooldownStart && data.writeChances === 0) {
+                  const elapsed = Math.floor((now - Number(writeCooldownStart)) / 1000);
+                  const remaining = 10800 - elapsed;
+                  if (remaining > 0) {
+                    writeCountdown.value = remaining;
+                    if (writeTimer) clearInterval(writeTimer);
+                    writeTimer = setInterval(() => {
+                      writeCountdown.value--;
+                      if (writeCountdown.value <= 0) {
+                        clearInterval(writeTimer);
+                        writeTimer = null;
+                        writeCountdown.value = 0;
+                        localStorage.removeItem('piaoWriteCooldownStart_' + userInfo.userId);
+                        if (writeChances.value === 0) {
+                          writeChances.value = 1;
+                          syncChances();
+                        }
+                      }
+                    }, 1000);
+                  } else {
+                    localStorage.removeItem('piaoWriteCooldownStart_' + userInfo.userId);
+                    writeChances.value = 1;
+                    syncChances();
+                  }
+                }
+
+                // 恢复拾纸团冷却倒计时
+                const pickCooldownStart = localStorage.getItem('piaoPickCooldownStart_' + userInfo.userId);
+                if (pickCooldownStart && data.pickChances === 0) {
+                  const elapsed = Math.floor((now - Number(pickCooldownStart)) / 1000);
+                  const remaining = 10800 - elapsed;
+                  if (remaining > 0) {
+                    pickCountdown.value = remaining;
+                    if (pickTimer) clearInterval(pickTimer);
+                    pickTimer = setInterval(() => {
+                      pickCountdown.value--;
+                      if (pickCountdown.value <= 0) {
+                        clearInterval(pickTimer);
+                        pickTimer = null;
+                        pickCountdown.value = 0;
+                        localStorage.removeItem('piaoPickCooldownStart_' + userInfo.userId);
+                        if (pickChances.value === 0) {
+                          pickChances.value = 1;
+                          syncChances();
+                        }
+                      }
+                    }, 1000);
+                  } else {
+                    localStorage.removeItem('piaoPickCooldownStart_' + userInfo.userId);
+                    pickChances.value = 1;
+                    syncChances();
+                  }
+                }
+              }
+            } catch (e) {}
+            currentPage.value = 'main';
+            loadTaskStatus();
+            startDailyRefresh();
+          }
+
+          try {
+            const resp = await fetch('/api/universities');
+            universitiesData.value = await resp.json();
+            buildAddressColumns();
+          } catch (e) {
+            vant.showToast('加载大学数据失败');
+          }
+        });
+
+        watch(currentPage, (val) => {
+          if (val === 'register') {
+            vant.showToast({ message: '以下注册信息将写入The Player中，为了精准匹配，请如实填写', duration: 3000 });
+          }
+        });
+
+        function buildAddressColumns() {
+          const data = universitiesData.value;
+          const provinces = Object.keys(data);
+          const columns = provinces.map(province => {
+            const cities = Object.keys(data[province]);
+            const cityChildren = cities.map(city => {
+              const unis = data[province][city];
+              const uniChildren = unis.map(uni => ({ text: uni, value: uni }));
+              return { text: city, value: city, children: uniChildren };
+            });
+            return { text: province, value: province, children: cityChildren };
+          });
+          addressColumns.value = columns;
+        }
+
+        function onAddressConfirm({ selectedValues, selectedOptions }) {
+          form.province = selectedValues[0] || '';
+          form.city = selectedValues[1] || '';
+          form.university = selectedValues[2] || '';
+          addressText.value = selectedOptions.map(o => o?.text || '').join(' / ');
+          showAddressPicker.value = false;
+        }
+
+        function normalizeUsername(value) {
+          return value.normalize('NFKC').trim().toLowerCase();
+        }
+
+        function getApiErrorMessage(data, fallback) {
+          if (typeof data?.detail === 'string') return data.detail;
+          if (Array.isArray(data?.detail) && data.detail.length > 0) {
+            return String(data.detail[0].msg || fallback).replace(/^Value error,\s*/, '');
+          }
+          return data?.error || fallback;
+        }
+
+        async function onLoginClick() {
+          const username = normalizeUsername(loginForm.username);
+          if (!username) {
+            vant.showToast('请输入用户名');
+            return;
+          }
+          if (!loginForm.password) {
+            vant.showToast('请输入密码');
+            return;
+          }
+
+          if (loginLoading.value) return;
+          loginLoading.value = true;
+
+          try {
+            const resp = await fetch('/api/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                username,
+                password: loginForm.password
+              })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              localStorage.setItem('piaoUserId', data.userId);
+              localStorage.setItem('piaoNickname', data.nickname);
+              localStorage.setItem('piaoToken', data.token);  // 存储JWT令牌
+              userInfo.userId = data.userId;
+              userInfo.nickname = data.nickname;
+              writeChances.value = data.writeChances;
+              pickChances.value = data.pickChances;
+              writeCountdown.value = 0;
+              pickCountdown.value = 0;
+              if (writeTimer) { clearInterval(writeTimer); writeTimer = null; }
+              if (pickTimer) { clearInterval(pickTimer); pickTimer = null; }
+
+              // 恢复冷却倒计时
+              const now = Date.now();
+              const writeCooldownStart = localStorage.getItem('piaoWriteCooldownStart_' + data.userId);
+              if (writeCooldownStart && data.writeChances === 0) {
+                const elapsed = Math.floor((now - Number(writeCooldownStart)) / 1000);
+                const remaining = 10800 - elapsed;
+                if (remaining > 0) {
+                  writeCountdown.value = remaining;
+                  writeTimer = setInterval(() => {
+                    writeCountdown.value--;
+                    if (writeCountdown.value <= 0) {
+                      clearInterval(writeTimer);
+                      writeTimer = null;
+                      writeCountdown.value = 0;
+                      localStorage.removeItem('piaoWriteCooldownStart_' + userInfo.userId);
+                      if (writeChances.value === 0) {
+                        writeChances.value = 1;
+                        syncChances();
+                      }
+                    }
+                  }, 1000);
+                } else {
+                  localStorage.removeItem('piaoWriteCooldownStart_' + data.userId);
+                  writeChances.value = 1;
+                  syncChances();
+                }
+              }
+              const pickCooldownStart = localStorage.getItem('piaoPickCooldownStart_' + data.userId);
+              if (pickCooldownStart && data.pickChances === 0) {
+                const elapsed = Math.floor((now - Number(pickCooldownStart)) / 1000);
+                const remaining = 10800 - elapsed;
+                if (remaining > 0) {
+                  pickCountdown.value = remaining;
+                  pickTimer = setInterval(() => {
+                    pickCountdown.value--;
+                    if (pickCountdown.value <= 0) {
+                      clearInterval(pickTimer);
+                      pickTimer = null;
+                      pickCountdown.value = 0;
+                      localStorage.removeItem('piaoPickCooldownStart_' + userInfo.userId);
+                      if (pickChances.value === 0) {
+                        pickChances.value = 1;
+                        syncChances();
+                      }
+                    }
+                  }, 1000);
+                } else {
+                  localStorage.removeItem('piaoPickCooldownStart_' + data.userId);
+                  pickChances.value = 1;
+                  syncChances();
+                }
+              }
+              currentPage.value = 'main';
+              loadTaskStatus();
+              vant.showToast('登录成功！');
+            } else {
+              vant.showToast(getApiErrorMessage(data, '登录失败'));
+            }
+          } catch (e) {
+            vant.showToast('网络错误，请稍后重试');
+          } finally {
+            loginLoading.value = false;
+          }
+        }
+
+        async function onRegisterClick() {
+          const username = normalizeUsername(form.username);
+          if (!username) {
+            vant.showToast('用户名不能为空');
+            return;
+          }
+          if (!/^[\u4e00-\u9fffA-Za-z0-9_]{2,20}$/u.test(username)) {
+            vant.showToast('用户名需为2-20位，仅可使用中文、字母、数字和下划线');
+            return;
+          }
+          if (!form.password) {
+            vant.showToast('密码不能为空');
+            return;
+          }
+          if (form.password.length < 8 || form.password.length > 128) {
+            vant.showToast('密码长度需为8-128位');
+            return;
+          }
+          if (!form.age || parseInt(form.age) < 10 || parseInt(form.age) > 100) {
+            vant.showToast('年龄需在10~100之间');
+            return;
+          }
+          if (form.hobbies.length === 0) {
+            vant.showToast('请至少选择一个游戏搭子');
+            return;
+          }
+          if (!form.contactValue.trim()) {
+            vant.showToast('请输入联系方式');
+            return;
+          }
+          if (!form.province || !form.city || !form.university) {
+            vant.showToast('请选择完整的地址信息');
+            return;
+          }
+
+          if (registerLoading.value) return;
+          registerLoading.value = true;
+
+          try {
+            const resp = await fetch('/api/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                username,
+                password: form.password,
+                gender: form.gender,
+                age: parseInt(form.age),
+                hobbies: form.hobbies,
+                contactType: form.contactType,
+                contactValue: form.contactValue.trim(),
+                province: form.province,
+                city: form.city,
+                university: form.university
+              })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              localStorage.setItem('piaoUserId', data.userId);
+              localStorage.setItem('piaoNickname', data.nickname);
+              localStorage.setItem('piaoToken', data.token);  // 存储JWT令牌
+              userInfo.userId = data.userId;
+              userInfo.nickname = data.nickname;
+              resetChances();
+              currentPage.value = 'main';
+              loadTaskStatus();
+              startDailyRefresh();
+              vant.showToast('注册成功！');
+            } else {
+              vant.showToast(getApiErrorMessage(data, '注册失败'));
+            }
+          } catch (e) {
+            vant.showToast('网络错误，请稍后重试');
+          } finally {
+            registerLoading.value = false;
+          }
+        }
+
+        function generateParticles() {
+          const colors = ['#ff6b6b', '#ffd93d', '#6bcb77', '#4d96ff', '#ff6b81', '#a29bfe', '#fd79a8', '#ffeaa7'];
+          const particles = [];
+          for (let i = 0; i < 30; i++) {
+            particles.push({
+              id: i,
+              x: 45 + Math.random() * 10,
+              y: 40 + Math.random() * 20,
+              size: 4 + Math.random() * 8,
+              color: colors[Math.floor(Math.random() * colors.length)],
+              tx: (Math.random() - 0.5) * 300,
+              ty: (Math.random() - 0.5) * 300,
+              delay: Math.random() * 400,
+              active: false
+            });
+          }
+          return particles;
+        }
+
+        function generateSparkles() {
+          const emojis = ['✨', '⭐', '💫', '🌟', '🎉', '🎊', '💎', '🎁'];
+          const list = [];
+          for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 / 12) * i;
+            const dist = 60 + Math.random() * 40;
+            list.push({
+              id: i,
+              x: 150 + Math.cos(angle) * 30,
+              y: 150 + Math.sin(angle) * 30,
+              sx: Math.cos(angle) * dist,
+              sy: Math.sin(angle) * dist,
+              emoji: emojis[Math.floor(Math.random() * emojis.length)],
+              delay: i * 50,
+              active: false
+            });
+          }
+          return list;
+        }
+
+        function playBlindBox(type, callback) {
+          blindBoxType.value = type;
+          blindBoxOpening.value = false;
+          blindBoxShaking.value = false;
+          blindBoxLightActive.value = false;
+          blindBoxShowResult.value = false;
+          blindBoxSparkles.value = false;
+          blindBoxCallback.value = callback;
+          blindBoxParticles.value = generateParticles();
+          blindBoxSparkleList.value = generateSparkles();
+          showBlindBox.value = true;
+        }
+
+        function onBlindBoxClick() {
+          if (blindBoxShaking.value || blindBoxOpening.value || blindBoxShowResult.value) return;
+
+          blindBoxShaking.value = true;
+
+          setTimeout(() => {
+            blindBoxShaking.value = false;
+            blindBoxOpening.value = true;
+
+            setTimeout(() => {
+              blindBoxLightActive.value = true;
+              blindBoxSparkles.value = true;
+
+              blindBoxParticles.value.forEach((p, i) => {
+                setTimeout(() => {
+                  p.active = true;
+                }, i * 15);
+              });
+
+              blindBoxSparkleList.value.forEach((s, i) => {
+                setTimeout(() => {
+                  s.active = true;
+                }, i * 40);
+              });
+
+              setTimeout(() => {
+                showBlindBox.value = false;
+                blindBoxOpening.value = false;
+                blindBoxShaking.value = false;
+                blindBoxLightActive.value = false;
+                blindBoxSparkles.value = false;
+                blindBoxParticles.value = [];
+                blindBoxSparkleList.value = [];
+                if (blindBoxCallback.value) blindBoxCallback.value();
+                blindBoxCallback.value = null;
+              }, 800);
+            }, 300);
+          }, 1500);
+        }
+
+        function onWriteClick(bonus) {
+          isBonusWrite.value = !!bonus;
+          if (!isBonusWrite.value && writeChances.value <= 0) {
+            vant.showToast('写纸团次数已用完，请等待倒计时');
+            return;
+          }
+          if (isBonusWrite.value && writeBonusRemaining.value <= 0) {
+            vant.showToast('今日写纸团奖励次数已用完');
+            return;
+          }
+          if (isBonusWrite.value) {
+            showWritePopup.value = true;
+          } else {
+            playBlindBox('write', () => { showWritePopup.value = true; });
+          }
+        }
+
+        function onPickClick() {
+          pickMode = 'legacy';
+          if (pickChances.value <= 0) {
+            vant.showToast('拾纸团次数已用完，请等待倒计时');
+            return;
+          }
+          pickTargetColumns.value = addressColumns.value;
+          showPickPicker.value = true;
+        }
+
+        function onSmartPickClick() {
+          pickMode = 'smart';
+          if (pickChances.value <= 0) {
+            vant.showToast('拾纸团次数已用完，请等待倒计时');
+            return;
+          }
+          pickTargetColumns.value = addressColumns.value;
+          showPickPicker.value = true;
+        }
+
+        function onPickTargetConfirm({ selectedValues, selectedOptions }) {
+          pickTarget.province = selectedValues[0] || '';
+          pickTarget.city = selectedValues[1] || '';
+          pickTarget.university = selectedValues[2] || '';
+          pickTarget.text = selectedOptions.map(o => o?.text || '').join(' / ');
+          showPickPicker.value = false;
+          playBlindBox('pick', () => {
+            if (pickMode === 'smart') pickBottleSmart();
+            else pickBottle();
+          });
+        }
+
+        function getWriteCooldownKey() {
+          return 'piaoWriteCooldownStart_' + userInfo.userId;
+        }
+        function getPickCooldownKey() {
+          return 'piaoPickCooldownStart_' + userInfo.userId;
+        }
+
+        function startWriteCountdown() {
+          writeCountdown.value = 10800;
+          localStorage.setItem(getWriteCooldownKey(), String(Date.now()));
+          if (writeTimer) clearInterval(writeTimer);
+          writeTimer = setInterval(() => {
+            writeCountdown.value--;
+            if (writeCountdown.value <= 0) {
+              clearInterval(writeTimer);
+              writeTimer = null;
+              writeCountdown.value = 0;
+              localStorage.removeItem(getWriteCooldownKey());
+              if (writeChances.value === 0) {
+                writeChances.value = 1;
+                syncChances();
+              }
+            }
+          }, 1000);
+        }
+
+        function startPickCountdown() {
+          pickCountdown.value = 10800;
+          localStorage.setItem(getPickCooldownKey(), String(Date.now()));
+          if (pickTimer) clearInterval(pickTimer);
+          pickTimer = setInterval(() => {
+            pickCountdown.value--;
+            if (pickCountdown.value <= 0) {
+              clearInterval(pickTimer);
+              pickTimer = null;
+              pickCountdown.value = 0;
+              localStorage.removeItem(getPickCooldownKey());
+              if (pickChances.value === 0) {
+                pickChances.value = 1;
+                syncChances();
+              }
+            }
+          }, 1000);
+        }
+
+        function formatCountdown(seconds) {
+          const h = Math.floor(seconds / 3600);
+          const m = Math.floor((seconds % 3600) / 60);
+          const s = seconds % 60;
+          if (h > 0) return h + '时' + String(m).padStart(2, '0') + '分' + String(s).padStart(2, '0') + '秒';
+          if (m > 0) return m + '分' + String(s).padStart(2, '0') + '秒';
+          return s + '秒';
+        }
+
+        async function loadContentSuggestions() {
+          if (contentGenLoading.value || !userInfo.userId) return;
+          const requestUserId = userInfo.userId;
+          const isCurrent = () => userInfo.userId === requestUserId && currentPage.value !== 'login';
+          // 流式和回退请求共享快照；正文传历史可避免中文文案撑大 URL。
+          const requestBody = JSON.stringify({
+            userId: requestUserId,
+            previousSuggestions: (contentSuggestionHistory.get(requestUserId) || []).slice(),
+          });
+          contentGenLoading.value = true;
+          contentSuggestions.value = [];
+          selectedAiContent.value = '';
+          selectedAiContentProof.value = '';
+          let reader = null;
+          let receivedResult = false;
+          let streamFinished = false;
+          let streamFailed = false;
+          try {
+            const resp = await authFetch('/api/content-gen/stream', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: requestBody,
+            });
+            if (!isCurrent()) return;
+            if (!resp.ok) {
+              const data = await resp.json().catch(() => ({}));
+              if (!isCurrent()) return;
+              vant.showToast(data.detail || '生成失败，请稍后重试');
+              return;
+            }
+            if (!resp.body) throw new Error('生成流不可用');
+            reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            const parser = createSseParser((eventName, data) => {
+              if (!isCurrent() || streamFinished) return;
+              if (eventName === 'result') {
+                if (!applyContentSuggestions(data, requestUserId)) throw new Error('生成结果无效');
+                receivedResult = true;
+              } else if (eventName === 'error') {
+                streamFailed = true;
+                streamFinished = true;
+                contentSuggestions.value = [];
+                vant.showToast(data.message || '生成失败，请稍后重试');
+              } else if (eventName === 'done') {
+                streamFinished = true;
+              }
+            });
+            while (!streamFinished) {
+              const { done, value } = await reader.read();
+              if (!isCurrent()) return;
+              if (done) {
+                parser.push(decoder.decode(), true);
+                break;
+              }
+              parser.push(decoder.decode(value, { stream: true }));
+            }
+            if (!receivedResult && !streamFailed && isCurrent()) {
+              await fetchContentSuggestionsFallback(requestBody, requestUserId, isCurrent);
+            }
+          } catch (e) {
+            // 仅连接或流解析失败时回退；服务端明确报错时直接显示错误。
+            if (!receivedResult && isCurrent() && e.message !== 'Unauthorized' && e.message !== 'Forbidden') {
+              await fetchContentSuggestionsFallback(requestBody, requestUserId, isCurrent);
+            }
+          } finally {
+            if (reader) {
+              await reader.cancel().catch(() => {});
+              reader.releaseLock();
+            }
+            contentGenLoading.value = false;
+          }
+        }
+
+        function applyContentSuggestions(data, requestUserId) {
+          const suggestions = data && Array.isArray(data.suggestions) ? data.suggestions : [];
+          if (!suggestions.length || suggestions.some(item => !item
+              || typeof item.content !== 'string' || !item.content.trim()
+              || Array.from(item.content.trim()).length > 200)) return false;
+          const contents = suggestions.map(item => item.content.trim());
+          const history = contentSuggestionHistory.get(requestUserId) || [];
+          if (new Set(contents).size !== contents.length || contents.some(content => history.includes(content))) {
+            return false;
+          }
+          contentSuggestions.value = suggestions.map((item, index) => ({ ...item, content: contents[index] }));
+          contentSuggestionHistory.set(requestUserId, [...history, ...contents].slice(-30));
+          return true;
+        }
+
+        function selectAiContentSuggestion(item) {
+          writeContent.value = item.content || '';
+          selectedAiContent.value = writeContent.value;
+          selectedAiContentProof.value = item.proof || '';
+        }
+
+        function onWriteContentInput() {
+          // 任何手动输入都会使 AI 来源凭证失效，后端将恢复审核。
+          selectedAiContent.value = '';
+          selectedAiContentProof.value = '';
+        }
+
+        // 普通接口回退：当SSE流式接口不可用时使用
+        async function fetchContentSuggestionsFallback(requestBody, requestUserId, isCurrent) {
+          try {
+            const resp = await authFetch('/api/content-gen', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: requestBody,
+            });
+            if (!isCurrent()) return;
+            const data = await resp.json();
+            if (!isCurrent()) return;
+            if (resp.ok) {
+              if (!applyContentSuggestions(data, requestUserId)) {
+                vant.showToast('暂未生成新的建议，请重试');
+              }
+            } else {
+              vant.showToast(data.detail || '生成失败，请稍后重试');
+            }
+          } catch (e) {
+            if (isCurrent() && e.message !== 'Unauthorized' && e.message !== 'Forbidden') {
+              vant.showToast('生成失败，请检查网络后重试');
+            }
+          }
+        }
+
+        async function onWriteConfirm() {
+          const content = writeContent.value.trim();
+          if (!content) {
+            vant.showToast('纸团内容不能为空');
+            return;
+          }
+          const aiProof = selectedAiContent.value === content ? selectedAiContentProof.value : '';
+          try {
+            const resp = await authFetch('/api/write', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: userInfo.userId, content, aiProof: aiProof || null, useBonus: isBonusWrite.value })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              writeContent.value = '';
+              selectedAiContent.value = '';
+              selectedAiContentProof.value = '';
+              showWritePopup.value = false;
+
+              if (isBonusWrite.value) {
+                pickChances.value++;
+                writeBonusUsed.value = data.writeBonusUsed ?? writeBonusUsed.value;
+                writeBonusRemaining.value = data.writeBonusRemaining ?? writeBonusRemaining.value;
+                vant.showToast('投放成功！拾纸团+1 🎉');
+              } else {
+                writeChances.value--;
+                if (writeChances.value === 0 && !writeTimer) {
+                  startWriteCountdown();
+                }
+                vant.showToast('投放成功');
+              }
+              isBonusWrite.value = false;
+
+              syncChances();
+            } else {
+              vant.showToast(data.detail || data.error || '投放失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function pickBottle() {
+          pickLoading.value = true;
+          vant.showToast({ type: 'loading', message: '正在匹配纸团...', forbidClick: true, duration: 0 });
+          const startTime = Date.now();
+
+          try {
+            const params = new URLSearchParams({ userId: userInfo.userId });
+            if (pickTarget.university) params.set('university', pickTarget.university);
+            if (pickTarget.city) params.set('city', pickTarget.city);
+            if (pickTarget.province) params.set('province', pickTarget.province);
+
+            const resp = await authFetch(`/api/pick?${params.toString()}`);
+            const data = await resp.json();
+            const elapsed = Date.now() - startTime;
+            if (elapsed < 500) await new Promise(r => setTimeout(r, 500 - elapsed));
+            vant.closeToast();
+            if (data.hasBottle) {
+              pickResult.value = data;
+              showPickResult.value = true;
+              pickChances.value--;
+              if (pickChances.value === 0 && !pickTimer) {
+                startPickCountdown();
+              }
+              syncChances();
+
+              if (data.matchReason) {
+                vant.showToast({ message: `🤖 ${data.matchReason}`, duration: 3000 });
+              } else if (data.matchLevel === 'city') {
+                vant.showToast({ message: `${pickTarget.university}暂无纸团，已为您匹配同城市其他学校的纸团`, duration: 3000 });
+              } else if (data.matchLevel === 'province') {
+                vant.showToast({ message: `${pickTarget.city}暂无纸团，已为您匹配同省份其他城市的纸团`, duration: 3000 });
+              } else if (data.matchLevel === 'nationwide') {
+                vant.showToast({ message: `${pickTarget.province}暂无纸团，已为您匹配全国其他地区的纸团`, duration: 3000 });
+              }
+            } else {
+              vant.showToast('暂时没有纸团，快去写一个吧');
+            }
+          } catch (e) {
+            vant.closeToast();
+            vant.showToast('网络错误，请稍后重试');
+          } finally {
+            pickLoading.value = false;
+          }
+        }
+
+        function pickResultFromWorkflow(data) {
+          const match = data && data.match ? data.match : {};
+          const best = match.best_match || {};
+          if (!best.bottle_id) return null;
+          return {
+            hasBottle: true,
+            bottleUserId: best.user_id || 0,
+            content: best.content || '',
+            createdAt: best.created_at || '',
+            nickname: best.nickname || '',
+            gender: best.gender || '',
+            age: best.age || 0,
+            hobbies: best.hobbies || '',
+            contact_type: best.contact_type || '',
+            contact_value: best.contact_value || '',
+            province: best.province || '',
+            city: best.city || '',
+            university: best.university || '',
+            matchLevel: match.match_level || '',
+            matchReason: match.match_reason || '',
+            matchScore: match.match_score || 0,
+          };
+        }
+
+        async function openChatForWorkflow(data, hint) {
+          const result = pickResultFromWorkflow(data);
+          if (!result || !result.bottleUserId) {
+            vant.showToast(data && data.error ? data.error : '没有找到可用的纸团');
+            return false;
+          }
+
+          try {
+            const resp = await authFetch('/api/conversations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userInfo.userId,
+                targetUserId: result.bottleUserId,
+              }),
+            });
+            const conversation = await resp.json();
+            if (!resp.ok) {
+              vant.showToast(conversation.detail || '创建对话失败');
+              return false;
+            }
+
+            showSmartPickApproval.value = false;
+            smartPickRun.value = null;
+            smartPickHints.value = [];
+            smartPickSelectedHint.value = '';
+            showPickResult.value = false;
+            pickResult.value = result;
+
+            chatTarget.id = conversation.targetUserId || result.bottleUserId;
+            chatTarget.nickname = conversation.targetNickname || result.nickname || '';
+            chatTarget.gender = conversation.targetGender || result.gender || '';
+            chatTarget.age = conversation.targetAge || result.age || 0;
+            chatTarget.hobbies = conversation.targetHobbies || result.hobbies || '';
+            chatTarget.province = conversation.targetProvince || result.province || '';
+            chatTarget.city = conversation.targetCity || result.city || '';
+            chatTarget.university = conversation.targetUniversity || result.university || '';
+            chatTarget.contactType = conversation.targetContactType || result.contact_type || '';
+            chatTarget.contactValue = conversation.targetContactValue || result.contact_value || '';
+            chatTarget.conversationId = conversation.id;
+
+            await loadMessages(conversation.id);
+            // loadMessages 会清空输入框，所以进入聊天页后最后再填入建议。
+            chatInput.value = hint || '';
+            currentPage.value = 'chatDetail';
+
+            if (pickChances.value > 0) pickChances.value--;
+            if (pickChances.value === 0 && !pickTimer) startPickCountdown();
+            syncChances();
+            return true;
+          } catch (e) {
+            vant.showToast('网络错误，请稍后重试');
+            return false;
+          }
+        }
+
+        async function pickBottleSmart() {
+          pickLoading.value = true;
+          vant.showToast({
+            type: 'loading',
+            message: '正在运行可恢复 Agent 工作流...',
+            forbidClick: true,
+            duration: 0,
+          });
+          try {
+            const resp = await authFetch('/api/pick/runs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userInfo.userId,
+                university: pickTarget.university,
+                city: pickTarget.city,
+                province: pickTarget.province,
+              }),
+            });
+            const data = await resp.json();
+            vant.closeToast();
+            if (!resp.ok) {
+              vant.showToast(data.detail || '智能流程启动失败');
+              return;
+            }
+            if (data.status === 'awaiting_approval') {
+              smartPickRun.value = data;
+              smartPickHints.value = Array.isArray(data.approvedHints) ? data.approvedHints : [];
+              smartPickSelectedHint.value = smartPickHints.value[0] || '';
+              showSmartPickApproval.value = true;
+              return;
+            }
+            if (data.status === 'approved') {
+              await openChatForWorkflow(
+                data,
+                Array.isArray(data.approvedHints) ? data.approvedHints[0] : '',
+              );
+              return;
+            }
+            if (data.status === 'no_result') {
+              vant.showToast('暂时没有纸团，快去写一个吧');
+              return;
+            }
+            vant.showToast(data.error || '智能流程暂不可用');
+          } catch (e) {
+            vant.closeToast();
+            vant.showToast('网络错误，请稍后重试');
+          } finally {
+            pickLoading.value = false;
+          }
+        }
+
+        async function approveSmartPick() {
+          const run = smartPickRun.value;
+          const hint = smartPickSelectedHint.value;
+          if (!run || !run.runId || !hint) return;
+          smartPickLoading.value = true;
+          try {
+            const resp = await authFetch(`/api/pick/runs/${encodeURIComponent(run.runId)}/resume`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userInfo.userId,
+                approved: true,
+                hint,
+              }),
+            });
+            const data = await resp.json();
+            if (!resp.ok) {
+              vant.showToast(data.detail || '确认失败，请重试');
+              return;
+            }
+            if (data.status === 'approved' && data.pickRecorded === true && await openChatForWorkflow(data, hint)) {
+              vant.showToast('已进入聊天，破冰建议已填入输入框');
+            } else {
+              vant.showToast(data.error || '工作流未完成');
+            }
+          } catch (e) {
+            vant.showToast('网络错误，请稍后重试');
+          } finally {
+            smartPickLoading.value = false;
+          }
+        }
+
+        async function cancelSmartPick() {
+          const run = smartPickRun.value;
+          showSmartPickApproval.value = false;
+          smartPickRun.value = null;
+          smartPickHints.value = [];
+          smartPickSelectedHint.value = '';
+          if (run && run.runId) {
+            try {
+              await authFetch(`/api/pick/runs/${encodeURIComponent(run.runId)}/resume`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  userId: userInfo.userId,
+                  approved: false,
+                }),
+              });
+            } catch (e) {}
+          }
+        }
+
+        async function openHistory() {
+          try {
+            const resp = await authFetch(`/api/history?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              historyData.writeRecords = data.writeRecords || [];
+              historyData.pickRecords = data.pickRecords || [];
+              currentPage.value = 'history';
+            } else {
+              vant.showToast(data.error || '获取历史记录失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function chatFromHistory(item) {
+          if (!item.bottleUserId) {
+            vant.showToast('无法获取对方信息');
+            return;
+          }
+          try {
+            const resp = await authFetch('/api/conversations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: userInfo.userId, targetUserId: item.bottleUserId })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              chatTarget.id = data.targetUserId;
+              chatTarget.nickname = data.targetNickname;
+              chatTarget.gender = data.targetGender;
+              chatTarget.age = data.targetAge;
+              chatTarget.hobbies = data.targetHobbies;
+              chatTarget.province = data.targetProvince;
+              chatTarget.city = data.targetCity;
+              chatTarget.university = data.targetUniversity;
+              chatTarget.contactType = data.targetContactType;
+              chatTarget.contactValue = data.targetContactValue;
+              chatTarget.conversationId = data.id;
+              await loadMessages(data.id);
+              loadIceBreakHints();
+              currentPage.value = 'chatDetail';
+            } else {
+              vant.showToast(data.detail || '创建对话失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        function formatTime(timeStr) {
+          if (!timeStr) return '';
+          const d = new Date(timeStr);
+          const pad = n => String(n).padStart(2, '0');
+          return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function resetChances() {
+          writeChances.value = 1;
+          pickChances.value = 1;
+          writeCountdown.value = 0;
+          pickCountdown.value = 0;
+          if (writeTimer) { clearInterval(writeTimer); writeTimer = null; }
+          if (pickTimer) { clearInterval(pickTimer); pickTimer = null; }
+          checkedIn.value = false;
+          inviteRemaining.value = 3;
+          writeBonusUsed.value = 0;
+          writeBonusRemaining.value = 3;
+        }
+
+        async function syncChances() {
+          try {
+            const resp = await authFetch(`/api/user-chances?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              writeChances.value = data.writeChances;
+              pickChances.value = data.pickChances;
+            }
+          } catch (e) {}
+        }
+
+        async function loadTaskStatus() {
+          try {
+            const resp = await authFetch(`/api/checkin-status?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              checkedIn.value = !data.canCheckin;
+              inviteRemaining.value = data.inviteRemaining ?? 3;
+              writeBonusUsed.value = data.writeBonusUsed ?? 0;
+              writeBonusRemaining.value = data.writeBonusRemaining ?? 3;
+            }
+          } catch (e) {}
+          loadUnreadCount();
+        }
+
+        async function loadUnreadCount() {
+          try {
+            const resp = await authFetch(`/api/conversations?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              totalUnread.value = (data.conversations || []).reduce((sum, c) => sum + c.unreadCount, 0);
+            }
+          } catch (e) {}
+        }
+
+        function startDailyRefresh() {
+          if (dailyRefreshTimer) clearInterval(dailyRefreshTimer);
+          lastCheckedDate = new Date().toISOString().slice(0, 10);
+          dailyRefreshTimer = setInterval(() => {
+            const today = new Date().toISOString().slice(0, 10);
+            if (today !== lastCheckedDate) {
+              lastCheckedDate = today;
+              loadTaskStatus();
+              vant.showToast({ message: '新的一天开始了！签到和邀请次数已刷新', duration: 3000 });
+            }
+          }, 60000);
+        }
+
+        function stopDailyRefresh() {
+          if (dailyRefreshTimer) {
+            clearInterval(dailyRefreshTimer);
+            dailyRefreshTimer = null;
+          }
+          lastCheckedDate = '';
+        }
+
+        async function onCheckin() {
+          try {
+            const resp = await authFetch('/api/checkin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: userInfo.userId })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              checkedIn.value = true;
+              writeChances.value++;
+              pickChances.value++;
+              syncChances();
+              vant.showToast('签到成功！写纸团+1 拾纸团+1');
+            } else {
+              vant.showToast(data.error || '签到失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function onInvite() {
+          shareLinkUrl.value = window.location.origin + '?inviter=' + userInfo.userId;
+          showSharePanel.value = true;
+        }
+
+        async function onShareToApp(app) {
+          // 先复制链接到剪贴板
+          await copyToClipboard(shareLinkUrl.value);
+
+          if (app === 'copy') {
+            vant.showToast('链接已复制，可粘贴发送给好友');
+            claimInviteReward();
+            return;
+          }
+
+          // 尝试使用Web Share API（HTTPS下可用）
+          if (navigator.share) {
+            try {
+              await navigator.share({
+                title: 'The Player',
+                text: '来The Player写下你的心声，等待有缘人拾起！',
+                url: shareLinkUrl.value
+              });
+              showSharePanel.value = false;
+              claimInviteReward();
+              return;
+            } catch (e) {}
+          }
+
+          // HTTP环境下，提示用户手动分享
+          const appNames = { wechat: '微信', qq: 'QQ', weibo: '微博' };
+          vant.showToast({ message: '链接已复制！请打开' + (appNames[app] || app) + '，粘贴发送给好友', duration: 3000 });
+          showSharePanel.value = false;
+          claimInviteReward();
+        }
+
+        async function onCopyShareLink() {
+          await copyToClipboard(shareLinkUrl.value);
+          vant.showToast('链接已复制，请粘贴发送给好友');
+          showSharePanel.value = false;
+          claimInviteReward();
+        }
+
+        async function copyToClipboard(text) {
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch (e) {
+            try {
+              const textarea = document.createElement('textarea');
+              textarea.value = text;
+              textarea.style.position = 'fixed';
+              textarea.style.left = '-9999px';
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand('copy');
+              document.body.removeChild(textarea);
+            } catch (e2) {}
+          }
+        }
+
+        async function claimInviteReward() {
+          try {
+            const resp = await authFetch('/api/invite', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: userInfo.userId })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              inviteRemaining.value = data.inviteRemaining;
+              pickChances.value++;
+              syncChances();
+              vant.showToast('邀请成功！拾纸团+1');
+            } else {
+              vant.showToast(data.error || '邀请奖励领取失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function onCopyQQGroup() {
+          await copyToClipboard('157454878');
+          vant.showToast('群号已复制，请打开QQ搜索加入');
+          showFeedback.value = false;
+        }
+
+
+
+        function exitLogin() {
+          vant.showDialog({
+            title: '确认退出',
+            message: '退出后可使用用户名重新登录',
+            showCancelButton: true,
+            confirmButtonText: '确认',
+            cancelButtonText: '取消'
+          }).then(() => {
+            localStorage.removeItem('piaoUserId');
+            localStorage.removeItem('piaoNickname');
+            localStorage.removeItem('piaoToken');
+            resetChances();
+            stopDailyRefresh();
+            currentPage.value = 'login';
+            loginForm.username = '';
+            loginForm.password = '';
+          }).catch(() => {});
+        }
+
+        async function onSendMessage() {
+          if (!pickResult.value) return;
+          const targetUserId = pickResult.value.bottleUserId;
+          if (!targetUserId) {
+            vant.showToast('无法获取对方信息');
+            return;
+          }
+          try {
+            const resp = await authFetch('/api/conversations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: userInfo.userId, targetUserId: targetUserId })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              showPickResult.value = false;
+              chatTarget.id = data.targetUserId;
+              chatTarget.nickname = data.targetNickname;
+              chatTarget.gender = data.targetGender;
+              chatTarget.age = data.targetAge;
+              chatTarget.hobbies = data.targetHobbies;
+              chatTarget.province = data.targetProvince;
+              chatTarget.city = data.targetCity;
+              chatTarget.university = data.targetUniversity;
+              chatTarget.contactType = data.targetContactType;
+              chatTarget.contactValue = data.targetContactValue;
+              chatTarget.conversationId = data.id;
+              await loadMessages(data.id);
+              loadIceBreakHints();
+              currentPage.value = 'chatDetail';
+            } else {
+              vant.showToast(data.detail || '创建对话失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function openChatList() {
+          try {
+            const resp = await authFetch(`/api/conversations?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              conversations.value = data.conversations || [];
+              totalUnread.value = conversations.value.reduce((sum, c) => sum + c.unreadCount, 0);
+              currentPage.value = 'chat';
+            } else {
+              vant.showToast('获取对话列表失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function goBackToChatList() {
+          try {
+            const resp = await authFetch(`/api/conversations?userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              conversations.value = data.conversations || [];
+              totalUnread.value = conversations.value.reduce((sum, c) => sum + c.unreadCount, 0);
+            }
+          } catch (e) {}
+          currentPage.value = 'chat';
+        }
+
+        async function openChat(conv) {
+          chatTarget.id = conv.targetUserId;
+          chatTarget.nickname = conv.targetNickname;
+          chatTarget.gender = conv.targetGender;
+          chatTarget.age = conv.targetAge;
+          chatTarget.hobbies = conv.targetHobbies;
+          chatTarget.province = conv.targetProvince;
+          chatTarget.city = conv.targetCity;
+          chatTarget.university = conv.targetUniversity;
+          chatTarget.contactType = conv.targetContactType;
+          chatTarget.contactValue = conv.targetContactValue;
+          chatTarget.conversationId = conv.id;
+          await loadMessages(conv.id);
+          loadIceBreakHints();
+          currentPage.value = 'chatDetail';
+        }
+
+        async function loadMessages(conversationId) {
+          try {
+            const resp = await authFetch(`/api/messages?conversationId=${conversationId}&userId=${userInfo.userId}`);
+            const data = await resp.json();
+            if (resp.ok) {
+              chatMessages.value = data.messages || [];
+              chatInput.value = '';
+              setTimeout(() => {
+                const el = document.querySelector('.msg-list');
+                if (el) el.scrollTop = el.scrollHeight;
+              }, 100);
+            }
+          } catch (e) {}
+        }
+
+        /** 使用 AI 推荐的破冰消息：只填入输入框，发送时仍统一经过内容审核。 */
+        function useAiHint(hint) {
+          chatInput.value = hint;
+        }
+
+        async function sendChatMessage() {
+          if (!chatInput.value.trim()) return;
+          if (!chatTarget.conversationId) return;
+
+          try {
+            const resp = await authFetch('/api/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                conversationId: chatTarget.conversationId,
+                senderId: userInfo.userId,
+                content: chatInput.value.trim()
+              })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              chatMessages.value.push(data);
+              chatInput.value = '';
+              iceBreakHints.value = [];
+              setTimeout(() => {
+                const el = document.querySelector('.msg-list');
+                if (el) el.scrollTop = el.scrollHeight;
+              }, 50);
+            } else {
+              vant.showToast(data.detail || '发送失败');
+            }
+          } catch (e) {
+            vant.showToast('网络错误');
+          }
+        }
+
+        async function loadIceBreakHints() {
+          if (!chatTarget.id || !userInfo.userId) return;
+          if (iceBreakLoading.value
+              && iceBreakActiveRequest?.userId === userInfo.userId
+              && iceBreakActiveRequest?.targetUserId === chatTarget.id) return;
+          if (iceBreakAbortController) iceBreakAbortController.abort();
+          const request = {
+            userId: userInfo.userId,
+            targetUserId: chatTarget.id,
+            requestId: createRequestId(),
+          };
+          const isCurrent = () => iceBreakActiveRequest === request
+            && userInfo.userId === request.userId
+            && chatTarget.id === request.targetUserId
+            && currentPage.value !== 'login';
+          const controller = new AbortController();
+          iceBreakActiveRequest = request;
+          iceBreakAbortController = controller;
+          iceBreakLoading.value = true;
+          iceBreakHints.value = [];
+          let reader = null;
+          let streamFinished = false;
+          let streamRetryable = false;
+          try {
+            const params = new URLSearchParams({
+              userId: String(request.userId),
+              targetUserId: String(request.targetUserId),
+              requestId: request.requestId,
+            });
+            const resp = await authFetch('/api/ice-break/stream?' + params.toString(), {
+              signal: controller.signal,
+            });
+            if (!isCurrent()) return;
+            if (!resp.ok) {
+              const data = await resp.json().catch(() => ({}));
+              if (resp.status < 500) {
+                vant.showToast(getApiErrorMessage(data, '获取建议失败'));
+                return;
+              }
+              throw new Error('Ice-break stream unavailable');
+            }
+            if (!resp.body) throw new Error('Ice-break stream unavailable');
+            reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            const parser = createSseParser((eventName, data) => {
+              if (!isCurrent() || streamFinished) return;
+              if (eventName === 'result') {
+                iceBreakHints.value = data.hints || [];
+              } else if (eventName === 'error') {
+                streamRetryable = data.retryable === true;
+                if (!streamRetryable) vant.showToast(data.message || '获取建议失败');
+                streamFinished = true;
+              } else if (eventName === 'done') {
+                streamFinished = true;
+              }
+            });
+            while (!streamFinished) {
+              const { done, value } = await reader.read();
+              if (!isCurrent()) {
+                await reader.cancel().catch(() => {});
+                return;
+              }
+              if (done) {
+                parser.push(decoder.decode(), true);
+                break;
+              }
+              parser.push(decoder.decode(value, { stream: true }));
+            }
+            if (streamFinished) {
+              await reader.cancel().catch(() => {});
+              if (streamRetryable && isCurrent()) {
+                // 仅恢复一次；普通接口失败只提示，不递归重试或创建新 requestId。
+                await fetchIceBreakHintsFallback(request, isCurrent, controller.signal);
+              }
+            } else if (isCurrent()) {
+              // 没收到 done 时取回同一请求结果，不创建第二次生成任务。
+              await fetchIceBreakHintsFallback(request, isCurrent, controller.signal);
+            }
+          } catch (e) {
+            if (isCurrent() && e.name !== 'AbortError' && e.message !== 'Forbidden') {
+              if (reader) await reader.cancel().catch(() => {});
+              await fetchIceBreakHintsFallback(request, isCurrent, controller.signal);
+            }
+          } finally {
+            if (reader) reader.releaseLock();
+            if (iceBreakActiveRequest === request) {
+              iceBreakLoading.value = false;
+              iceBreakActiveRequest = null;
+              iceBreakAbortController = null;
+            }
+          }
+        }
+
+        // 普通接口回退共用原 requestId，服务端可以返回已完成结果或恢复检查点。
+        async function fetchIceBreakHintsFallback(request, isCurrent, signal) {
+          if (!isCurrent()) return;
+          try {
+            const params = new URLSearchParams({
+              userId: String(request.userId),
+              targetUserId: String(request.targetUserId),
+              requestId: request.requestId,
+            });
+            const resp = await authFetch('/api/ice-break?' + params.toString(), { signal });
+            const data = await resp.json();
+            if (!isCurrent()) return;
+            if (resp.ok) {
+              iceBreakHints.value = data.hints || [];
+            } else {
+              vant.showToast(getApiErrorMessage(data, '获取建议失败'));
+            }
+          } catch (e) {
+            if (isCurrent() && e.name !== 'AbortError' && !['Unauthorized', 'Forbidden'].includes(e.message)) {
+              vant.showToast('网络错误');
+            }
+          }
+        }
+
+        function shouldShowTime(idx) {
+          if (idx === 0) return true;
+          const cur = new Date(chatMessages.value[idx].createdAt).getTime();
+          const prev = new Date(chatMessages.value[idx - 1].createdAt).getTime();
+          return cur - prev > 5 * 60 * 1000;
+        }
+
+        // ===== AI聊天功能 =====
+
+        /** 发送AI聊天消息
+         * 流程：
+         *   1. 将用户消息添加到消息列表
+         *   2. 添加AI加载状态消息
+         *   3. 通过SSE流式接口调用AI聊天Agent
+         *   4. 解析SSE事件，更新AI回复内容
+         *   5. 完成后移除加载状态，显示完整回复
+         */
+        async function sendAiChat(quickMessage) {
+          const message = quickMessage || aiChatInput.value.trim();
+          if (!message || aiChatLoading.value) return;
+
+          aiChatInput.value = '';
+          aiChatLoading.value = true;
+          aiChatStatus.value = '正在思考...';
+
+          // 添加用户消息
+          aiChatMessages.value.push({
+            role: 'user',
+            content: message,
+          });
+
+          // 添加AI加载状态消息
+          const aiMsgIdx = aiChatMessages.value.length;
+          aiChatMessages.value.push({
+            role: 'assistant',
+            content: '',
+            loading: true,
+            loadingText: '思考中...',
+            toolBadge: '',
+          });
+
+          // 滚动到底部
+          scrollAiChatToBottom();
+
+          try {
+            // 构建对话历史（最近10条消息）
+            const history = aiChatMessages.value
+              .filter(m => !m.loading && m.content)
+              .slice(-11, -1)  // 排除当前消息，取最近10条
+              .map(m => ({ role: m.role, content: m.content }));
+
+            // 使用SSE流式接口
+            const token = localStorage.getItem('piaoToken');
+            const params = new URLSearchParams({
+              userId: String(userInfo.userId),
+              message: message,
+              _t: String(Date.now()),
+            });
+
+            const resp = await fetch(`/api/ai-chat/stream?${params.toString()}`, {
+              headers: { 'Authorization': token ? 'Bearer ' + token : '' },
+            });
+
+            if (resp.status === 401) {
+              localStorage.removeItem('piaoUserId');
+              localStorage.removeItem('piaoNickname');
+              localStorage.removeItem('piaoToken');
+              userInfo.userId = null;
+              userInfo.nickname = '';
+              currentPage.value = 'login';
+              vant.showToast('登录已过期，请重新登录');
+              aiChatLoading.value = false;
+              return;
+            }
+            if (resp.status === 403) {
+              vant.showToast('无权操作');
+              aiChatLoading.value = false;
+              return;
+            }
+
+            const reader = resp.body.getReader();
+            const decoder = new TextDecoder();
+            let fullResponse = '';
+            let currentToolBadge = '';
+            let streamFinished = false;
+            const parser = createSseParser((currentEvent, data) => {
+              if (streamFinished) return;
+              if (currentEvent === 'progress') {
+                const stage = data.stage || '';
+                const toolName = data.tool || '';
+                if (stage === 'tool_calling' && toolName) {
+                  const toolNameMap = {
+                    'get-weibo-trending': '微博热搜',
+                    'get-zhihu-trending': '知乎热榜',
+                    'get-bilibili-rank': 'B站排行',
+                    'get-douyin-trending': '抖音热搜',
+                    'get-toutiao-trending': '今日头条',
+                    'get-36kr-trending': '36氪',
+                    'get-douban-rank': '豆瓣热门',
+                    'get-netease-news-trending': '网易新闻',
+                    'get-tencent-news-trending': '腾讯新闻',
+                    'get-thepaper-trending': '澎湃新闻',
+                    'get-nytimes-news': '纽约时报',
+                    'get-bbc-news': 'BBC新闻',
+                    'get-theverge-news': 'The Verge',
+                    'get-ifanr-news': '爱范儿',
+                    'get-infoq-news': 'InfoQ',
+                    'get-juejin-article-rank': '掘金',
+                    'get-sspai-rank': '少数派',
+                    'get-smzdm-rank': '什么值得买',
+                    'get-weread-rank': '微信读书',
+                    'get-9to5mac-news': '9to5Mac',
+                    'get-gcores-new': '机核网',
+                  };
+                  currentToolBadge = toolNameMap[toolName] || toolName;
+                  aiChatStatus.value = '正在查询' + currentToolBadge + '...';
+                  aiChatMessages.value[aiMsgIdx] = {
+                    role: 'assistant', content: '', loading: true,
+                    loadingText: aiChatStatus.value, toolBadge: currentToolBadge,
+                  };
+                } else if (stage === 'thinking') {
+                  aiChatStatus.value = '正在思考...';
+                }
+              } else if (currentEvent === 'response') {
+                // 模型进入新一轮最终回答时，替换前一轮的中间说明。
+                const content = data.content || '';
+                fullResponse = data.mode === 'replace' ? content : fullResponse + content;
+                aiChatStatus.value = '正在回复...';
+                aiChatMessages.value[aiMsgIdx] = {
+                  role: 'assistant', content: fullResponse,
+                  loading: false, toolBadge: currentToolBadge,
+                };
+                scrollAiChatToBottom();
+              } else if (currentEvent === 'done') {
+                // 完整答案来自同一次图执行，覆盖校准，不能再次追加。
+                fullResponse = typeof data.response === 'string' ? data.response : fullResponse;
+                aiChatLoading.value = false;
+                aiChatStatus.value = '';
+                aiChatMessages.value[aiMsgIdx] = {
+                  role: 'assistant',
+                  content: fullResponse || '抱歉，我暂时无法获取数据，请稍后再试。',
+                  loading: false, toolBadge: currentToolBadge,
+                };
+                streamFinished = true;
+                scrollAiChatToBottom();
+              } else if (currentEvent === 'error') {
+                aiChatLoading.value = false;
+                aiChatStatus.value = '';
+                aiChatMessages.value[aiMsgIdx] = {
+                  role: 'assistant',
+                  content: data.message || 'AI聊天失败，请稍后重试',
+                  loading: false, toolBadge: '',
+                };
+                streamFinished = true;
+                scrollAiChatToBottom();
+              }
+            });
+
+            try {
+              while (!streamFinished) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  parser.push(decoder.decode(), true);
+                  break;
+                }
+                parser.push(decoder.decode(value, { stream: true }));
+              }
+              if (streamFinished) {
+                await reader.cancel().catch(() => {});
+                return;
+              }
+            } finally {
+              reader.releaseLock();
+            }
+
+            // 流结束但未收到 done，保留现有普通接口回退行为。
+            aiChatLoading.value = false;
+            aiChatStatus.value = '';
+            if (!fullResponse) await sendAiChatFallback(message, history, aiMsgIdx);
+          } catch (e) {
+            // SSE不可用，回退到普通接口
+            await sendAiChatFallback(message, [], aiMsgIdx);
+          }
+        }
+
+        /** AI聊天普通接口回退：当SSE流式接口不可用时使用 */
+        async function sendAiChatFallback(message, history, aiMsgIdx) {
+          try {
+            const resp = await authFetch('/api/ai-chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: userInfo.userId,
+                message: message,
+                history: history,
+              }),
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              const toolBadge = (data.toolUsed && data.toolUsed.length > 0)
+                ? data.toolUsed[0]
+                : '';
+              // 将工具名转为中文
+              const toolNameMap = {
+                'get-weibo-trending': '微博热搜',
+                'get-zhihu-trending': '知乎热榜',
+                'get-bilibili-rank': 'B站排行',
+                'get-douyin-trending': '抖音热搜',
+                'get-toutiao-trending': '今日头条',
+                'get-36kr-trending': '36氪',
+                'get-douban-rank': '豆瓣热门',
+                'get-netease-news-trending': '网易新闻',
+                'get-tencent-news-trending': '腾讯新闻',
+                'get-thepaper-trending': '澎湃新闻',
+              };
+              aiChatMessages.value[aiMsgIdx] = {
+                role: 'assistant',
+                content: data.response || '抱歉，我暂时无法获取数据。',
+                loading: false,
+                toolBadge: toolNameMap[toolBadge] || toolBadge,
+              };
+            } else {
+              aiChatMessages.value[aiMsgIdx] = {
+                role: 'assistant',
+                content: data.detail || 'AI聊天失败，请稍后重试',
+                loading: false,
+                toolBadge: '',
+              };
+            }
+          } catch (e) {
+            aiChatMessages.value[aiMsgIdx] = {
+              role: 'assistant',
+              content: '网络错误，请稍后重试',
+              loading: false,
+              toolBadge: '',
+            };
+          } finally {
+            aiChatLoading.value = false;
+            aiChatStatus.value = '';
+            scrollAiChatToBottom();
+          }
+        }
+
+        /** 滚动AI聊天消息列表到底部 */
+        function scrollAiChatToBottom() {
+          setTimeout(() => {
+            const el = document.querySelector('.ai-chat-messages');
+            if (el) el.scrollTop = el.scrollHeight;
+          }, 50);
+        }
+
+        function formatMsgTime(timeStr) {
+          if (!timeStr) return '';
+          const d = new Date(timeStr);
+          if (isNaN(d.getTime())) return '';
+          const now = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          const isToday = d.toDateString() === now.toDateString();
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          const isYesterday = d.toDateString() === yesterday.toDateString();
+          const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+          if (isToday) return time;
+          if (isYesterday) return `昨天 ${time}`;
+          return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${time}`;
+        }
+
+        return {
+          currentPage, userInfo, loginForm, loginLoading, showLoginPwd, showRegisterPwd, form, addressText, showAddressPicker, addressColumns,
+          showWritePopup, writeContent, contentSuggestions, selectedAiContent, selectedAiContentProof, contentGenLoading, pickLoading, showPickResult, pickResult, showPickPicker, pickTargetColumns, pickTarget, showSmartPickApproval, smartPickRun, smartPickHints, smartPickSelectedHint, smartPickLoading, showBlindBox, blindBoxType, blindBoxOpening, blindBoxShaking, blindBoxLightActive, blindBoxShowResult, blindBoxSparkles, blindBoxParticles, blindBoxSparkleList, registerLoading,
+          historyData,
+          writeChances, pickChances, writeCountdown, pickCountdown,
+          checkedIn, inviteRemaining, showSharePanel, shareLinkUrl, showFeedback, writeBonusUsed, writeBonusRemaining, isBonusWrite,
+          conversations, totalUnread, chatTarget, chatMessages, chatInput, msgListRef, iceBreakHints, iceBreakLoading,
+          aiChatMessages, aiChatInput, aiChatLoading, aiChatStatus, aiChatMsgRef,
+          // 广场模块
+          plazaPosts, plazaLoading, plazaHasMore, showPostPopup, newPostContent, plazaPublishing,
+          showCommentPopup, currentComments, newCommentContent,
+          newPostMediaList, fileInputRef, postErrorMessage,
+          onLoginClick, onRegisterClick, onAddressConfirm, onWriteClick, onPickClick, onSmartPickClick, onPickTargetConfirm, onBlindBoxClick, onWriteConfirm, pickBottle, pickBottleSmart, approveSmartPick, cancelSmartPick, openHistory, chatFromHistory,
+          onCheckin, onInvite, onShareToApp, onCopyShareLink, onCopyQQGroup,
+          onSendMessage, openChatList, goBackToChatList, openChat, sendChatMessage, shouldShowTime, formatMsgTime, loadUnreadCount, loadIceBreakHints, formatCountdown, loadContentSuggestions, selectAiContentSuggestion, onWriteContentInput,
+          useAiHint,
+          sendAiChat,
+          // 广场方法
+          openPlaza, loadMorePosts, publishPost, togglePostLike, openComments, publishComment,
+          triggerFileInput, handleFileSelect, removeMedia, cancelPost,
+          formatTime, exitLogin
+        };
+      }
+    });
+
+    app.use(vant);
+    app.mount('#app');
+  </script>
+</body>
+</html>

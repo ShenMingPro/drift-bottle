@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "codex/**"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Compile Python
+        run: python -m compileall -q app
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Check frontend JavaScript syntax
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const html = fs.readFileSync('public/index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+            .map((m) => m[1])
+            .filter((s) => s.trim());
+          for (const [index, script] of scripts.entries()) {
+            new Function(script);
+            console.log(`script ${index + 1}: syntax ok`);
+          }
+          NODE
+
+      - name: Run matching quality gate
+        run: python -m app.evals.cli --min-ndcg 0.8 --min-mrr 0.8 --min-recall 0.8
+
+  mysql-integration:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test-root
+          MYSQL_ROOT_HOST: "%"
+          MYSQL_DATABASE: paper_bottle_test_it
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptest-root"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+
+      - name: Run MySQL integration tests
+        env:
+          RUN_MYSQL_INTEGRATION: "1"
+          DB_HOST: 127.0.0.1
+          DB_PORT: "3306"
+          DB_USER: root
+          DB_PASSWORD: test-root
+          DB_NAME: paper_bottle_test_it
+        run: python -m pytest tests/integration -q

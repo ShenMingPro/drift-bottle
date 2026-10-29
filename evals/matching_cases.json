@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "query": "摄影 跑步",
+      "relevant_ids": [2],
+      "candidates": [
+        {"id": 1, "content": "今天篮球比赛输了", "hobbies": "篮球"},
+        {"id": 2, "content": "最近喜欢摄影，周末会去跑步", "hobbies": "摄影,跑步"}
+      ]
+    },
+    {
+      "query": "编程 游戏",
+      "relevant_ids": [1],
+      "candidates": [
+        {"id": 1, "content": "找人一起写代码和打游戏", "hobbies": "编程,游戏"},
+        {"id": 2, "content": "想找人一起去食堂", "hobbies": "美食"}
+      ]
+    },
+    {
+      "query": "音乐 电影",
+      "relevant_ids": [2],
+      "candidates": [
+        {"id": 1, "content": "操场跑步打卡", "hobbies": "跑步"},
+        {"id": 2, "content": "最近在听音乐和看电影", "hobbies": "音乐,电影"}
+      ]
+    },
+    {
+      "query": "考研 学习",
+      "relevant_ids": [1],
+      "candidates": [
+        {"id": 1, "content": "图书馆一起学习考研", "hobbies": "考研,学习"},
+        {"id": 2, "content": "周末想去看球赛", "hobbies": "篮球"}
+      ]
+    }
+  ]
+}

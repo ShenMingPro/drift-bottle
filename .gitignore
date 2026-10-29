@@ -1,0 +1,38 @@
+# ===== Python 缓存与虚拟环境 =====
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# ===== 敏感配置（含数据库密码、API Key，禁止上传） =====
+.env
+
+# ===== 本地工具配置 =====
+.claude/
+
+# ===== 本地生成的文档、简历与预览产物 =====
+/outputs/
+
+# ===== 运行时用户上传文件（图片/视频等） =====
+public/uploads/
+
+# ===== 聊天 AI 辅助持久化状态（含会话资料，不提交） =====
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+
+# ===== 调试与部署日志 =====
+logs/
+*_log.txt
+*_result.txt
+diag2.txt
+diag_mysql.txt
+mysql_conn_test.txt
+
+# ===== 系统无关文件 =====
+*.lnk
+Desktop.ini
+Thumbs.db

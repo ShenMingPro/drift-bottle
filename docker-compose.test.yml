@@ -1,0 +1,14 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: test-root
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: paper_bottle_test_it
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-ptest-root"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
